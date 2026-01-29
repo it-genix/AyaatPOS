@@ -345,7 +345,8 @@ const InventoryView: React.FC = () => {
   const sortedAndFilteredProducts = useMemo(() => {
     let filtered = products.filter(p => {
       const matchesSearch = p.name.toLowerCase().includes(search.toLowerCase()) || 
-                           p.sku.toLowerCase().includes(search.toLowerCase());
+                           p.sku.toLowerCase().includes(search.toLowerCase()) ||
+                           (p.batchNumber && p.batchNumber.toLowerCase().includes(search.toLowerCase()));
       const matchesCategory = selectedCategory === 'ALL' || p.category === selectedCategory;
       return matchesSearch && matchesCategory;
     });
@@ -437,12 +438,10 @@ const InventoryView: React.FC = () => {
       alert(`Sync Complete: Processed ${lines.length - 1} catalog entries.`);
     };
     reader.readAsText(file);
-    // Reset input so same file can be imported twice if needed
     e.target.value = '';
   };
 
   const handleRestrictedAction = (type: 'ADD' | 'EDIT', product?: Product) => {
-    // Admin bypasses all checks
     if (isAdmin || !isCashier || isApproved) {
       if (type === 'ADD') { setSelectedProduct(undefined); setShowModal(true); }
       else { setSelectedProduct(product); setShowModal(true); }
@@ -459,6 +458,17 @@ const InventoryView: React.FC = () => {
     return false;
   };
 
+  const getExpiryStatus = (expiryDate?: string) => {
+    if (!expiryDate) return null;
+    const expiry = new Date(expiryDate);
+    const today = new Date();
+    const diffDays = Math.ceil((expiry.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+    
+    if (diffDays < 0) return { label: 'EXPIRED', color: 'bg-red-500 text-white' };
+    if (diffDays < 30) return { label: 'EXPIRING SOON', color: 'bg-amber-500 text-white' };
+    return null;
+  };
+
   const SortIcon = ({ column }: { column: keyof Product }) => {
     if (!sortConfig || sortConfig.key !== column) return <div className="flex flex-col opacity-20"><ChevronUp size={8}/><ChevronDown size={8}/></div>;
     return sortConfig.direction === 'asc' ? <ChevronUp size={12} className="text-blue-600"/> : <ChevronDown size={12} className="text-blue-600"/>;
@@ -469,7 +479,7 @@ const InventoryView: React.FC = () => {
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6">
         <div className="min-w-0">
           <h2 className="text-3xl sm:text-5xl font-black text-zinc-900 dark:text-zinc-100 tracking-tightest leading-none uppercase">Inventory</h2>
-          <p className="text-zinc-500 font-medium text-xs sm:text-base mt-2">Scale your catalog with advanced tracking.</p>
+          <p className="text-zinc-500 font-medium text-xs sm:text-base mt-2">Scale your catalog with advanced batch tracking.</p>
         </div>
         
         <div className="flex flex-wrap gap-3 w-full sm:w-auto">
@@ -515,14 +525,13 @@ const InventoryView: React.FC = () => {
                 <Search className="absolute left-5 top-1/2 -translate-y-1/2 text-zinc-400 group-focus-within:text-blue-600" size={20} />
                 <input 
                   type="text" 
-                  placeholder="Search catalog..." 
+                  placeholder="Search name, SKU, or batch..." 
                   className="w-full bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-[1.5rem] py-4 pl-14 pr-6 text-zinc-900 dark:text-zinc-100 focus:outline-none focus:ring-4 focus:ring-blue-600/10 text-sm font-bold shadow-sm" 
                   value={search} 
                   onChange={e => setSearch(e.target.value)} 
                 />
               </div>
               
-              {/* Mobile Sorting Menu */}
               <div className="lg:hidden relative">
                 <button 
                   onClick={() => setIsSortMenuOpen(!isSortMenuOpen)}
@@ -558,7 +567,6 @@ const InventoryView: React.FC = () => {
             </div>
           </div>
 
-          {/* Category Ribbon */}
           <div className="flex items-center gap-2 overflow-x-auto pb-2 -mx-2 px-2 no-scrollbar scroll-smooth">
             {categories.map(cat => (
               <button
@@ -577,7 +585,6 @@ const InventoryView: React.FC = () => {
           </div>
         </div>
 
-        {/* Desktop View: Sortable Table */}
         <div className="hidden lg:block overflow-x-auto">
           <table className="w-full text-left border-collapse min-w-[1200px]">
             <thead className="bg-zinc-50 dark:bg-zinc-800/40 text-zinc-500 text-[10px] uppercase tracking-widest font-black border-b border-zinc-100 dark:border-zinc-800">
@@ -595,6 +602,7 @@ const InventoryView: React.FC = () => {
               {sortedAndFilteredProducts.map(product => {
                 const isLowStock = product.stock <= product.minStock;
                 const hasOffer = isPromotionActive(product);
+                const expiryStatus = getExpiryStatus(product.expiryDate);
                 return (
                   <tr key={product.id} className={`transition-all group ${isLowStock ? 'bg-amber-50/20 dark:bg-amber-900/5' : 'hover:bg-zinc-50 dark:hover:bg-zinc-800/20'}`}>
                     <td className="px-10 py-8">
@@ -612,8 +620,27 @@ const InventoryView: React.FC = () => {
                       </div>
                     </td>
                     <td className="px-10 py-8"><span className="text-[10px] font-black text-zinc-500 uppercase tracking-widest bg-zinc-100 dark:bg-zinc-800 px-3 py-1.5 rounded-lg border border-zinc-200 dark:border-zinc-700">{product.category}</span></td>
-                    <td className="px-10 py-8"><span className="text-[10px] font-black text-zinc-500 uppercase tracking-widest bg-zinc-100 dark:bg-zinc-800 px-3 py-1.5 rounded-lg border border-zinc-200 dark:border-zinc-700">{product.batchNumber || 'N/A'}</span></td>
-                    <td className="px-10 py-8"><div className="flex items-center gap-2 text-xs font-bold text-zinc-500"><Calendar size={14} className="text-zinc-400" /> {product.expiryDate ? new Date(product.expiryDate).toLocaleDateString() : '—'}</div></td>
+                    <td className="px-10 py-8">
+                      <div className="flex flex-col gap-1">
+                        <span className="text-[10px] font-black text-zinc-500 uppercase tracking-widest bg-zinc-100 dark:bg-zinc-800 px-3 py-1.5 rounded-lg border border-zinc-200 dark:border-zinc-700 inline-flex items-center gap-2 w-fit">
+                          <Layers size={10} className="text-zinc-400"/>
+                          {product.batchNumber || 'N/A'}
+                        </span>
+                      </div>
+                    </td>
+                    <td className="px-10 py-8">
+                      <div className="space-y-1.5">
+                        <div className="flex items-center gap-2 text-xs font-bold text-zinc-500">
+                          <Calendar size={14} className="text-zinc-400" /> 
+                          {product.expiryDate ? new Date(product.expiryDate).toLocaleDateString() : '—'}
+                        </div>
+                        {expiryStatus && (
+                          <div className={`text-[8px] font-black uppercase tracking-widest px-2 py-0.5 rounded-md w-fit ${expiryStatus.color}`}>
+                            {expiryStatus.label}
+                          </div>
+                        )}
+                      </div>
+                    </td>
                     <td className="px-10 py-8">
                       <div className="space-y-1">
                         <div className={`text-sm font-black ${hasOffer ? 'text-zinc-400 line-through text-xs' : 'text-zinc-900 dark:text-zinc-100'}`}>{formatCurrency(product.price)}</div>
@@ -632,11 +659,11 @@ const InventoryView: React.FC = () => {
           </table>
         </div>
 
-        {/* Mobile/Tablet View: Responsive Cards */}
         <div className="lg:hidden p-6 space-y-4">
           {sortedAndFilteredProducts.map(product => {
              const isLowStock = product.stock <= product.minStock;
              const hasOffer = isPromotionActive(product);
+             const expiryStatus = getExpiryStatus(product.expiryDate);
              return (
                <div key={product.id} className={`bg-white dark:bg-zinc-950/50 p-6 rounded-[2.5rem] border transition-all ${isLowStock ? 'border-amber-500/30' : 'border-zinc-200 dark:border-zinc-800'}`}>
                  <div className="flex items-start justify-between mb-6">
@@ -681,9 +708,14 @@ const InventoryView: React.FC = () => {
                           <Layers size={12} className="text-zinc-400" />
                           <span className="text-[10px] font-black uppercase text-zinc-500">{product.batchNumber || 'NO BATCH'}</span>
                        </div>
-                       <div className="flex items-center gap-2">
+                       <div className="flex items-center gap-2 relative">
                           <Calendar size={12} className="text-zinc-400" />
                           <span className="text-[10px] font-black uppercase text-zinc-500">{product.expiryDate ? new Date(product.expiryDate).toLocaleDateString() : 'NO EXPIRY'}</span>
+                          {expiryStatus && (
+                             <div className={`absolute -top-6 left-0 text-[7px] font-black uppercase tracking-widest px-1.5 py-0.5 rounded-md ${expiryStatus.color}`}>
+                               {expiryStatus.label}
+                             </div>
+                          )}
                        </div>
                     </div>
                     {isLowStock && (

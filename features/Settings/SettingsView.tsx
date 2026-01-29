@@ -4,8 +4,7 @@ import {
   Settings, Store, Percent, ShieldCheck, Database, RefreshCw, Save, 
   Trash2, Bell, Smartphone, Globe, Lock, ShieldAlert, Cpu, Sparkles, 
   MapPin, Phone, LayoutGrid, Plus, X, CheckCircle2, ChevronRight,
-  ReceiptText, FileText, UserSquare, Shield, AlertTriangle, Eye,
-  Fingerprint, MonitorCheck, HardDrive, History
+  Shield, UserCog, Languages, Clock, Zap, FileText, MonitorCheck
 } from 'lucide-react';
 import { CURRENT_USER, MOCK_STORES } from '../../mockData';
 import { UserRole, Store as StoreType } from '../../types';
@@ -127,7 +126,7 @@ const SettingsView: React.FC = () => {
   const user = CURRENT_USER;
   const isAdmin = user.role === UserRole.ADMIN;
 
-  const [activeTab, setActiveTab] = useState<'GENERAL' | 'BRANCHES' | 'ROLES' | 'SECURITY' | 'MAINTENANCE'>('GENERAL');
+  const [activeTab, setActiveTab] = useState<'GENERAL' | 'BRANCHES' | 'PERMISSIONS' | 'SECURITY' | 'MAINTENANCE'>('GENERAL');
   const [stores, setStores] = useState<StoreType[]>(MOCK_STORES);
   const [showStoreModal, setShowStoreModal] = useState(false);
   const [editingStore, setEditingStore] = useState<StoreType | undefined>(undefined);
@@ -138,18 +137,9 @@ const SettingsView: React.FC = () => {
     currency: 'BDT',
     taxRate: 5,
     loyaltyDiscount: 5,
-    pointsPerUnit: 10,
-    allowNegativeStock: false,
-    requireCustomer: false,
-    receiptHeader: 'Thank you for choosing Ayaat!',
-    receiptFooter: 'Warranty valid for 7 days with original receipt.',
-    websiteUrl: 'https://ayaatpos.com'
-  });
-
-  const [permissions, setPermissions] = useState({
-    CASHIER: { voidSale: false, editPrice: false, openDrawer: true, registerCustomer: true },
-    MANAGER: { voidSale: true, editPrice: true, openDrawer: true, registerCustomer: true },
-    ADMIN: { voidSale: true, editPrice: true, openDrawer: true, registerCustomer: true }
+    pointsPerDollar: 10,
+    language: 'English (US)',
+    timezone: 'Asia/Dhaka (GMT+6)'
   });
 
   const [systemSettings, setSystemSettings] = useState({
@@ -157,9 +147,26 @@ const SettingsView: React.FC = () => {
     autoLock: 15,
     enableAI: true,
     cloudSync: true,
-    darkModeDefault: true,
-    biometricAuth: false,
-    auditLogging: true
+    darkModeDefault: true
+  });
+
+  // Role Permissions Mock Configuration
+  const [rolePermissions, setRolePermissions] = useState({
+    CASHIER: {
+      canRefund: false,
+      canApplyManualDiscount: true,
+      canEditStock: true,
+      canViewCostPrice: false,
+      canDeleteItemsFromCart: true
+    },
+    MANAGER: {
+      canRefund: true,
+      canApplyManualDiscount: true,
+      canEditStock: true,
+      canViewCostPrice: true,
+      canDeleteItemsFromCart: true,
+      canOverridePricing: true
+    }
   });
 
   const handleSave = () => {
@@ -175,12 +182,12 @@ const SettingsView: React.FC = () => {
     setShowStoreModal(false);
   };
 
-  const togglePermission = (role: keyof typeof permissions, perm: string) => {
-    setPermissions(prev => ({
+  const togglePermission = (role: 'CASHIER' | 'MANAGER', key: string) => {
+    setRolePermissions(prev => ({
       ...prev,
       [role]: {
         ...(prev[role] as any),
-        [perm]: !(prev[role] as any)[perm]
+        [key]: !(prev[role] as any)[key]
       }
     }));
   };
@@ -192,9 +199,9 @@ const SettingsView: React.FC = () => {
           <div className="w-20 h-20 bg-red-500/10 rounded-full flex items-center justify-center text-red-500 mx-auto">
             <ShieldAlert size={40} />
           </div>
-          <h2 className="text-2xl font-black tracking-tight">Access Restricted</h2>
+          <h2 className="text-2xl font-black tracking-tight text-zinc-900 dark:text-zinc-100">Access Restricted</h2>
           <p className="text-zinc-500 text-sm leading-relaxed">
-            Global Settings are reserved for Administrator accounts only. Please contact your system provider for elevation.
+            Global Settings and system parameters are reserved for Administrator accounts only.
           </p>
         </div>
       </div>
@@ -231,8 +238,8 @@ const SettingsView: React.FC = () => {
         {[
           { id: 'GENERAL', label: 'General', icon: Store },
           { id: 'BRANCHES', label: 'Branches', icon: LayoutGrid },
-          { id: 'ROLES', label: 'Roles', icon: Shield },
-          { id: 'SECURITY', label: 'Security', icon: Lock },
+          { id: 'PERMISSIONS', label: 'Roles', icon: UserCog },
+          { id: 'SECURITY', label: 'Security', icon: ShieldCheck },
           { id: 'MAINTENANCE', label: 'System', icon: Database }
         ].map(tab => (
           <button 
@@ -249,89 +256,120 @@ const SettingsView: React.FC = () => {
       <div className="flex-1 min-h-0">
         {activeTab === 'GENERAL' && (
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 animate-in fade-in slide-in-from-top-4 pb-10">
-            {/* Identity Panel */}
-            <div className="bg-white dark:bg-zinc-900 rounded-[2.5rem] p-8 border border-zinc-200 dark:border-zinc-800 shadow-sm space-y-8">
+            {/* Store Identity */}
+            <div className="bg-white dark:bg-zinc-900 rounded-[2.5rem] p-8 border border-zinc-200 dark:border-zinc-800 shadow-sm space-y-6">
               <div className="flex items-center gap-4">
                 <div className="p-3 bg-blue-600/10 rounded-2xl text-blue-600">
                   <Store size={22} />
                 </div>
-                <div>
-                  <h3 className="font-black text-xl tracking-tight">Identity & Localization</h3>
-                  <p className="text-[10px] font-black text-zinc-400 uppercase tracking-widest">Core business configuration</p>
-                </div>
+                <h3 className="font-black text-xl tracking-tight text-zinc-900 dark:text-zinc-100">Identity Management</h3>
               </div>
-              <div className="space-y-6">
+              <div className="space-y-4">
                 <div className="space-y-1.5">
-                  <label className="text-[10px] font-black uppercase tracking-widest text-zinc-400 ml-1">Master Brand Name</label>
-                  <input className="w-full bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-2xl py-4 px-5 font-bold outline-none" value={storeSettings.name} onChange={e => setStoreSettings({...storeSettings, name: e.target.value})} />
+                  <label className="text-[10px] font-black uppercase tracking-widest text-zinc-400 ml-1">Business Identity</label>
+                  <input className="w-full bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-2xl py-4 px-5 font-bold outline-none dark:text-white" value={storeSettings.name} onChange={e => setStoreSettings({...storeSettings, name: e.target.value})} />
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-1.5">
-                    <label className="text-[10px] font-black uppercase tracking-widest text-zinc-400 ml-1">Tax Engine (%)</label>
-                    <input type="number" className="w-full bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-2xl py-4 px-5 font-bold outline-none" value={storeSettings.taxRate} onChange={e => setStoreSettings({...storeSettings, taxRate: parseFloat(e.target.value)})} />
+                    <label className="text-[10px] font-black uppercase tracking-widest text-zinc-400 ml-1">Master Currency</label>
+                    <input className="w-full bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-2xl py-4 px-5 font-bold outline-none uppercase dark:text-white" value={storeSettings.currency} onChange={e => setStoreSettings({...storeSettings, currency: e.target.value})} />
                   </div>
                   <div className="space-y-1.5">
-                    <label className="text-[10px] font-black uppercase tracking-widest text-zinc-400 ml-1">Terminal ID</label>
-                    <input className="w-full bg-zinc-100 dark:bg-zinc-800/50 border border-zinc-200 dark:border-zinc-700 rounded-2xl py-4 px-5 font-mono text-xs font-bold outline-none opacity-60" value={storeSettings.terminalId} readOnly />
+                    <label className="text-[10px] font-black uppercase tracking-widest text-zinc-400 ml-1">Tax Engine (%)</label>
+                    <input type="number" className="w-full bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-2xl py-4 px-5 font-bold outline-none dark:text-white" value={storeSettings.taxRate} onChange={e => setStoreSettings({...storeSettings, taxRate: parseFloat(e.target.value)})} />
                   </div>
                 </div>
               </div>
             </div>
 
-            {/* Receipt Panel */}
-            <div className="bg-white dark:bg-zinc-900 rounded-[2.5rem] p-8 border border-zinc-200 dark:border-zinc-800 shadow-sm space-y-8">
+            {/* Regional Parameters */}
+            <div className="bg-white dark:bg-zinc-900 rounded-[2.5rem] p-8 border border-zinc-200 dark:border-zinc-800 shadow-sm space-y-6">
               <div className="flex items-center gap-4">
                 <div className="p-3 bg-emerald-600/10 rounded-2xl text-emerald-600">
-                  <ReceiptText size={22} />
+                  <Globe size={22} />
                 </div>
-                <div>
-                  <h3 className="font-black text-xl tracking-tight">Receipt Designer</h3>
-                  <p className="text-[10px] font-black text-zinc-400 uppercase tracking-widest">Customer billing template</p>
-                </div>
+                <h3 className="font-black text-xl tracking-tight text-zinc-900 dark:text-zinc-100">Regional Settings</h3>
               </div>
-              <div className="space-y-6">
+              <div className="space-y-4">
                 <div className="space-y-1.5">
-                  <label className="text-[10px] font-black uppercase tracking-widest text-zinc-400 ml-1">Header Message</label>
-                  <input className="w-full bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-2xl py-4 px-5 font-bold outline-none" value={storeSettings.receiptHeader} onChange={e => setStoreSettings({...storeSettings, receiptHeader: e.target.value})} />
+                  <label className="text-[10px] font-black uppercase tracking-widest text-zinc-400 ml-1">System Language</label>
+                  <select className="w-full bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-2xl py-4 px-5 font-bold outline-none appearance-none dark:text-white" value={storeSettings.language} onChange={e => setStoreSettings({...storeSettings, language: e.target.value})}>
+                     <option>English (US)</option>
+                     <option>Bengali (BD)</option>
+                     <option>Arabic (SA)</option>
+                  </select>
                 </div>
                 <div className="space-y-1.5">
-                  <label className="text-[10px] font-black uppercase tracking-widest text-zinc-400 ml-1">Footer Legal/Policy</label>
-                  <textarea rows={2} className="w-full bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-2xl py-4 px-5 font-medium outline-none text-sm" value={storeSettings.receiptFooter} onChange={e => setStoreSettings({...storeSettings, receiptFooter: e.target.value})} />
+                  <label className="text-[10px] font-black uppercase tracking-widest text-zinc-400 ml-1">Timezone Node</label>
+                  <select className="w-full bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-2xl py-4 px-5 font-bold outline-none appearance-none dark:text-white" value={storeSettings.timezone} onChange={e => setStoreSettings({...storeSettings, timezone: e.target.value})}>
+                     <option>Asia/Dhaka (GMT+6)</option>
+                     <option>Asia/Dubai (GMT+4)</option>
+                     <option>UTC (GMT+0)</option>
+                  </select>
                 </div>
               </div>
             </div>
 
-            {/* Operational Panel */}
-            <div className="lg:col-span-2 bg-white dark:bg-zinc-900 rounded-[2.5rem] p-8 border border-zinc-200 dark:border-zinc-800 shadow-sm space-y-8">
+            {/* AI & Cloud Integration */}
+            <div className="bg-white dark:bg-zinc-900 rounded-[2.5rem] p-8 border border-zinc-200 dark:border-zinc-800 shadow-sm space-y-6">
               <div className="flex items-center gap-4">
-                <div className="p-3 bg-amber-600/10 rounded-2xl text-amber-600">
-                  <MonitorCheck size={22} />
+                <div className="p-3 bg-purple-600/10 rounded-2xl text-purple-600">
+                  <Sparkles size={22} />
                 </div>
-                <div>
-                  <h3 className="font-black text-xl tracking-tight">Operational Logic</h3>
-                  <p className="text-[10px] font-black text-zinc-400 uppercase tracking-widest">Terminal behavioral rules</p>
-                </div>
+                <h3 className="font-black text-xl tracking-tight text-zinc-900 dark:text-zinc-100">AI & Cloud Hub</h3>
               </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-6">
+              <div className="space-y-6">
                  {[
-                   { id: 'allowNegativeStock', label: 'Allow Negative Stock', desc: 'Allow sales even if quantity is zero in database' },
-                   { id: 'requireCustomer', label: 'Mandatory CRM Entry', desc: 'Require a customer profile for every transaction' },
-                   { id: 'cloudSync', label: 'Real-time Mirroring', desc: 'Sync local sales to cloud instantly' },
-                   { id: 'enableAI', label: 'Predictive Insights', desc: 'Enable AI performance forecasting' }
+                   { id: 'enableAI', label: 'Predictive Inventory', desc: 'Auto-suggestions for stock replenishment', color: 'bg-purple-600' },
+                   { id: 'cloudSync', label: 'Global Data Mirror', desc: 'Real-time backup across all nodes', color: 'bg-blue-600' }
                  ].map(item => (
-                   <div key={item.id} className="flex items-center justify-between p-6 bg-zinc-50 dark:bg-zinc-950/50 rounded-3xl border border-zinc-100 dark:border-zinc-800">
+                   <div key={item.id} className="flex items-center justify-between">
                       <div className="space-y-0.5">
                         <p className="text-sm font-black text-zinc-900 dark:text-zinc-100">{item.label}</p>
-                        <p className="text-[10px] text-zinc-500 font-bold uppercase">{item.desc}</p>
+                        <p className="text-[10px] text-zinc-500 font-bold uppercase tracking-tight">{item.desc}</p>
                       </div>
                       <button 
-                        onClick={() => setStoreSettings(prev => ({...prev, [item.id]: !(prev as any)[item.id]}))}
-                        className={`w-12 h-6 rounded-full transition-all relative ${(storeSettings as any)[item.id] ? 'bg-blue-600' : 'bg-zinc-200 dark:bg-zinc-700'}`}
+                        onClick={() => setSystemSettings({...systemSettings, [item.id]: !(systemSettings as any)[item.id]})}
+                        className={`w-12 h-6 rounded-full transition-all relative ${(systemSettings as any)[item.id] ? item.color : 'bg-zinc-200 dark:bg-zinc-700'}`}
                       >
-                        <div className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-all ${(storeSettings as any)[item.id] ? 'left-7' : 'left-1'}`} />
+                        <div className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-all ${(systemSettings as any)[item.id] ? 'left-7' : 'left-1'}`} />
                       </button>
                    </div>
                  ))}
+              </div>
+            </div>
+
+            {/* Sales Terminal Parameters */}
+            <div className="bg-white dark:bg-zinc-900 rounded-[2.5rem] p-8 border border-zinc-200 dark:border-zinc-800 shadow-sm space-y-6">
+              <div className="flex items-center gap-4">
+                <div className="p-3 bg-orange-600/10 rounded-2xl text-orange-600">
+                  <MonitorCheck size={22} />
+                </div>
+                <h3 className="font-black text-xl tracking-tight text-zinc-900 dark:text-zinc-100">Terminal Parameters</h3>
+              </div>
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <div className="space-y-0.5">
+                    <p className="text-sm font-black text-zinc-900 dark:text-zinc-100">Automatic Session Lock</p>
+                    <p className="text-[10px] text-zinc-500 font-bold uppercase">Lock screen after inactivity</p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <input type="number" className="w-16 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl px-3 py-1.5 text-center text-sm font-black outline-none dark:text-white" value={systemSettings.autoLock} onChange={e => setSystemSettings({...systemSettings, autoLock: parseInt(e.target.value)})} />
+                    <span className="text-[10px] font-black text-zinc-400">MIN</span>
+                  </div>
+                </div>
+                <div className="flex items-center justify-between pt-4 border-t border-zinc-50 dark:border-zinc-800">
+                  <div className="space-y-0.5">
+                    <p className="text-sm font-black text-zinc-900 dark:text-zinc-100">Dark Mode Enforcement</p>
+                    <p className="text-[10px] text-zinc-500 font-bold uppercase">Force dark theme on all terminals</p>
+                  </div>
+                  <button 
+                    onClick={() => setSystemSettings({...systemSettings, darkModeDefault: !systemSettings.darkModeDefault})}
+                    className={`w-12 h-6 rounded-full transition-all relative ${systemSettings.darkModeDefault ? 'bg-zinc-900' : 'bg-zinc-200 dark:bg-zinc-700'}`}
+                  >
+                    <div className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-all ${systemSettings.darkModeDefault ? 'left-7' : 'left-1'}`} />
+                  </button>
+                </div>
               </div>
             </div>
           </div>
@@ -378,9 +416,10 @@ const SettingsView: React.FC = () => {
               </div>
             ))}
             
+            {/* Quick Add Placeholder */}
             <button 
               onClick={() => { setEditingStore(undefined); setShowStoreModal(true); }}
-              className="border-4 border-dashed border-zinc-200 dark:border-zinc-800 rounded-[2.5rem] flex flex-col items-center justify-center p-8 text-zinc-300 dark:text-zinc-800 hover:text-blue-500 hover:border-blue-500/50 transition-all group min-h-[350px]"
+              className="border-4 border-dashed border-zinc-200 dark:border-zinc-800 rounded-[2.5rem] flex flex-col items-center justify-center p-8 text-zinc-300 dark:text-zinc-800 hover:text-blue-500 hover:border-blue-500/50 transition-all group"
             >
               <Plus size={48} className="mb-4 group-hover:scale-125 transition-transform" />
               <span className="font-black uppercase tracking-[0.2em] text-[10px]">Add New Storefront</span>
@@ -388,102 +427,89 @@ const SettingsView: React.FC = () => {
           </div>
         )}
 
-        {activeTab === 'ROLES' && (
-          <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-[2.5rem] overflow-hidden shadow-sm animate-in fade-in slide-in-from-top-4 mb-10">
-            <div className="p-8 border-b border-zinc-100 dark:border-zinc-800 flex items-center gap-4 bg-zinc-50/50 dark:bg-zinc-800/20">
-               <div className="p-3 bg-indigo-600/10 rounded-2xl text-indigo-600">
-                 <Shield size={22} />
-               </div>
-               <div>
-                  <h3 className="font-black text-xl tracking-tight">Privilege Matrix</h3>
-                  <p className="text-[10px] font-black text-zinc-400 uppercase tracking-widest">Fine-grained role access control</p>
-               </div>
+        {activeTab === 'PERMISSIONS' && (
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 animate-in fade-in slide-in-from-top-4 pb-10">
+            {/* Cashier Permissions */}
+            <div className="bg-white dark:bg-zinc-900 rounded-[2.5rem] p-8 border border-zinc-200 dark:border-zinc-800 shadow-sm space-y-8">
+              <div className="flex items-center gap-4">
+                <div className="p-3 bg-zinc-100 dark:bg-zinc-800 rounded-2xl text-zinc-900 dark:text-zinc-100">
+                  <UserCog size={22} />
+                </div>
+                <div>
+                  <h3 className="font-black text-xl tracking-tight text-zinc-900 dark:text-zinc-100">Cashier Role</h3>
+                  <p className="text-[10px] font-black text-zinc-400 uppercase tracking-widest mt-1">Terminal operational limits</p>
+                </div>
+              </div>
+              <div className="space-y-6">
+                {Object.entries(rolePermissions.CASHIER).map(([key, value]) => (
+                  <div key={key} className="flex items-center justify-between">
+                    <div className="space-y-0.5">
+                      <p className="text-sm font-black text-zinc-900 dark:text-zinc-100 capitalize">{key.replace(/([A-Z])/g, ' $1').trim()}</p>
+                      <p className="text-[10px] text-zinc-500 font-bold uppercase">Access control level</p>
+                    </div>
+                    <button 
+                      onClick={() => togglePermission('CASHIER', key)}
+                      className={`w-12 h-6 rounded-full transition-all relative ${value ? 'bg-blue-600' : 'bg-zinc-200 dark:bg-zinc-700'}`}
+                    >
+                      <div className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-all ${value ? 'left-7' : 'left-1'}`} />
+                    </button>
+                  </div>
+                ))}
+              </div>
             </div>
-            <div className="overflow-x-auto">
-              <table className="w-full text-left border-collapse">
-                <thead className="bg-zinc-50 dark:bg-zinc-800/40 text-zinc-500 text-[10px] uppercase tracking-widest font-black border-b border-zinc-100 dark:border-zinc-800">
-                  <tr>
-                    <th className="px-10 py-6">Operation Capability</th>
-                    <th className="px-10 py-6 text-center">Cashier</th>
-                    <th className="px-10 py-6 text-center">Manager</th>
-                    <th className="px-10 py-6 text-center">Admin</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-zinc-50 dark:divide-zinc-800">
-                  {[
-                    { key: 'voidSale', label: 'Void Completed Transactions', desc: 'Permission to delete or reverse a sale' },
-                    { key: 'editPrice', label: 'Override Item Pricing', desc: 'Allows manual price adjustment at POS' },
-                    { key: 'openDrawer', label: 'Manual Drawer Release', desc: 'Permission to trigger cash drawer without sale' },
-                    { key: 'registerCustomer', label: 'Register New Members', desc: 'Can add customers to CRM database' }
-                  ].map(op => (
-                    <tr key={op.key} className="hover:bg-zinc-50 dark:hover:bg-zinc-800/10 transition-colors">
-                      <td className="px-10 py-6">
-                        <div className="space-y-0.5">
-                          <p className="text-sm font-black text-zinc-900 dark:text-zinc-100">{op.label}</p>
-                          <p className="text-[9px] text-zinc-400 font-bold uppercase tracking-wide">{op.desc}</p>
-                        </div>
-                      </td>
-                      {(['CASHIER', 'MANAGER', 'ADMIN'] as const).map(role => (
-                        <td key={role} className="px-10 py-6 text-center">
-                          <button 
-                            disabled={role === 'ADMIN'}
-                            onClick={() => togglePermission(role, op.key)}
-                            className={`w-10 h-5 rounded-full transition-all relative inline-block ${
-                              (permissions[role] as any)[op.key] ? 'bg-indigo-600' : 'bg-zinc-200 dark:bg-zinc-700'
-                            } ${role === 'ADMIN' ? 'opacity-50 cursor-not-allowed' : ''}`}
-                          >
-                            <div className={`absolute top-0.5 w-4 h-4 bg-white rounded-full transition-all ${
-                              (permissions[role] as any)[op.key] ? 'left-5.5' : 'left-0.5'
-                            }`} />
-                          </button>
-                        </td>
-                      ))}
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-            <div className="p-8 bg-indigo-50 dark:bg-indigo-900/10 border-t border-indigo-100 dark:border-indigo-800 flex items-center gap-4">
-               <ShieldAlert size={20} className="text-indigo-600 shrink-0" />
-               <p className="text-[10px] font-bold text-indigo-700 dark:text-indigo-400 uppercase tracking-widest leading-relaxed">
-                 Administrative role permissions are immutable to prevent system lockout. Role definitions are synchronized across all terminals in the enterprise network.
-               </p>
+
+            {/* Manager Permissions */}
+            <div className="bg-white dark:bg-zinc-900 rounded-[2.5rem] p-8 border border-zinc-200 dark:border-zinc-800 shadow-sm space-y-8">
+              <div className="flex items-center gap-4">
+                <div className="p-3 bg-emerald-600/10 rounded-2xl text-emerald-600">
+                  <Shield size={22} />
+                </div>
+                <div>
+                  <h3 className="font-black text-xl tracking-tight text-zinc-900 dark:text-zinc-100">Manager Role</h3>
+                  <p className="text-[10px] font-black text-zinc-400 uppercase tracking-widest mt-1">Delegated administrative powers</p>
+                </div>
+              </div>
+              <div className="space-y-6">
+                {Object.entries(rolePermissions.MANAGER).map(([key, value]) => (
+                  <div key={key} className="flex items-center justify-between">
+                    <div className="space-y-0.5">
+                      <p className="text-sm font-black text-zinc-900 dark:text-zinc-100 capitalize">{key.replace(/([A-Z])/g, ' $1').trim()}</p>
+                      <p className="text-[10px] text-zinc-500 font-bold uppercase">Privileged access control</p>
+                    </div>
+                    <button 
+                      onClick={() => togglePermission('MANAGER', key)}
+                      className={`w-12 h-6 rounded-full transition-all relative ${value ? 'bg-emerald-600' : 'bg-zinc-200 dark:bg-zinc-700'}`}
+                    >
+                      <div className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-all ${value ? 'left-7' : 'left-1'}`} />
+                    </button>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
         )}
 
         {activeTab === 'SECURITY' && (
-          <div className="max-w-4xl space-y-6 animate-in fade-in slide-in-from-top-4 pb-10">
+          <div className="max-w-3xl space-y-6 animate-in fade-in slide-in-from-top-4">
              <div className="bg-white dark:bg-zinc-900 rounded-[2.5rem] p-8 border border-zinc-200 dark:border-zinc-800 shadow-sm space-y-8">
                 <div className="flex items-center gap-4">
-                  <div className="p-3 bg-red-600/10 rounded-2xl text-red-600">
+                  <div className="p-3 bg-amber-600/10 rounded-2xl text-amber-600">
                     <Lock size={22} />
                   </div>
-                  <div>
-                    <h3 className="font-black text-xl tracking-tight">Security & Encryption</h3>
-                    <p className="text-[10px] font-black text-zinc-400 uppercase tracking-widest">Global access protection</p>
-                  </div>
+                  <h3 className="font-black text-xl tracking-tight text-zinc-900 dark:text-zinc-100">Global Security Access</h3>
                 </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-6">
                    {[
-                     { id: 'strictPin', label: 'Strict PIN Enforcement', desc: 'Bypass prevented even for Senior Managers', icon: Fingerprint },
-                     { id: 'auditLogging', label: 'Full Audit Mirroring', desc: 'Log every button press to blockchain ledger', icon: History },
-                     { id: 'biometricAuth', label: 'Biometric Checkpoint', desc: 'Secondary face/touch ID for high-value voids', icon: Smartphone }
+                     { id: 'strictPin', label: 'Strict PIN Enforcement', desc: 'Bypass prevented even for Managers' },
+                     { id: 'maskIdentity', label: 'Personnel Privacy', desc: 'Mask sensitive contact info from Generic roles' },
+                     { id: 'twoFactor', label: 'Global 2FA Override', desc: 'Mandatory for all Administrator accounts' }
                    ].map(sec => (
                      <div key={sec.id} className="flex items-center justify-between p-6 bg-zinc-50 dark:bg-zinc-950/50 rounded-3xl border border-zinc-100 dark:border-zinc-800">
-                        <div className="flex gap-4">
-                          <div className="p-2 bg-white dark:bg-zinc-800 rounded-xl text-zinc-400"><sec.icon size={16}/></div>
-                          <div className="space-y-0.5">
-                            <p className="text-sm font-black">{sec.label}</p>
-                            <p className="text-[9px] text-zinc-500 font-bold uppercase">{sec.desc}</p>
-                          </div>
+                        <div className="space-y-1">
+                          <p className="text-sm font-black text-zinc-900 dark:text-zinc-100">{sec.label}</p>
+                          <p className="text-[10px] text-zinc-500 font-bold uppercase">{sec.desc}</p>
                         </div>
-                        <button 
-                          onClick={() => setSystemSettings(prev => ({...prev, [sec.id]: !(prev as any)[sec.id]}))}
-                          className={`w-12 h-6 rounded-full transition-all relative ${(systemSettings as any)[sec.id] ? 'bg-red-600' : 'bg-zinc-200 dark:bg-zinc-700'}`}
-                        >
-                          <div className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-all ${(systemSettings as any)[sec.id] ? 'left-7' : 'left-1'}`} />
-                        </button>
+                        <button className="w-12 h-6 bg-blue-600 rounded-full relative"><div className="absolute top-1 left-7 w-4 h-4 bg-white rounded-full" /></button>
                      </div>
                    ))}
                 </div>
@@ -492,61 +518,47 @@ const SettingsView: React.FC = () => {
         )}
 
         {activeTab === 'MAINTENANCE' && (
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 animate-in fade-in slide-in-from-top-4 pb-10">
-             <div className="lg:col-span-2 bg-white dark:bg-zinc-900 rounded-[2.5rem] p-8 border border-zinc-200 dark:border-zinc-800 shadow-sm space-y-8">
+          <div className="max-w-3xl space-y-6 animate-in fade-in slide-in-from-top-4 pb-10">
+             <div className="bg-white dark:bg-zinc-900 rounded-[2.5rem] p-8 border border-zinc-200 dark:border-zinc-800 shadow-sm space-y-8">
                 <div className="flex items-center gap-4">
-                  <div className="p-3 bg-zinc-100 dark:bg-zinc-800 rounded-2xl text-zinc-600">
+                  <div className="p-3 bg-red-600/10 rounded-2xl text-red-600">
                     <Database size={22} />
                   </div>
-                  <div>
-                    <h3 className="font-black text-xl tracking-tight">System Reliability</h3>
-                    <p className="text-[10px] font-black text-zinc-400 uppercase tracking-widest">Maintenance & Sync</p>
-                  </div>
+                  <h3 className="font-black text-xl tracking-tight text-zinc-900 dark:text-zinc-100">System Reliability</h3>
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                    <button className="flex items-center justify-between p-6 bg-zinc-50 dark:bg-zinc-800 rounded-3xl border border-zinc-100 dark:border-zinc-700 hover:border-blue-600/50 transition-all group">
                       <div className="text-left">
                         <p className="text-[10px] font-black uppercase text-zinc-400 mb-1">Index Optimization</p>
-                        <p className="text-sm font-black">Rebuild Catalog Cache</p>
+                        <p className="text-sm font-black text-zinc-900 dark:text-zinc-100">Sync Catalog</p>
                       </div>
                       <RefreshCw size={20} className="text-zinc-300 group-hover:text-blue-600 group-hover:rotate-180 transition-all" />
                    </button>
                    <button className="flex items-center justify-between p-6 bg-zinc-50 dark:bg-zinc-800 rounded-3xl border border-zinc-100 dark:border-zinc-700 hover:border-blue-600/50 transition-all group">
                       <div className="text-left">
-                        <p className="text-[10px] font-black uppercase text-zinc-400 mb-1">Mirror Protocol</p>
-                        <p className="text-sm font-black">Force Cloud Sync</p>
+                        <p className="text-[10px] font-black uppercase text-zinc-400 mb-1">Global Flush</p>
+                        <p className="text-sm font-black text-zinc-900 dark:text-zinc-100">Clear Caches</p>
                       </div>
                       <Globe size={20} className="text-zinc-300 group-hover:text-blue-600" />
                    </button>
-                   <button className="flex items-center justify-between p-6 bg-zinc-50 dark:bg-zinc-800 rounded-3xl border border-zinc-100 dark:border-zinc-700 hover:border-blue-600/50 transition-all group">
-                      <div className="text-left">
-                        <p className="text-[10px] font-black uppercase text-zinc-400 mb-1">Asset Backup</p>
-                        <p className="text-sm font-black">Export Local DB</p>
-                      </div>
-                      <HardDrive size={20} className="text-zinc-300 group-hover:text-blue-600" />
-                   </button>
-                   <button className="flex items-center justify-between p-6 bg-red-500/5 dark:bg-red-500/10 rounded-3xl border border-red-200 dark:border-red-900/30 hover:bg-red-500 hover:text-white transition-all group">
-                      <div className="text-left">
-                        <p className="text-[10px] font-black uppercase text-red-400 group-hover:text-white mb-1">Emergency Protocol</p>
-                        <p className="text-sm font-black">Purge Data</p>
-                      </div>
-                      <Trash2 size={20} className="text-red-400 group-hover:text-white" />
+                </div>
+                <div className="pt-6 border-t border-zinc-50 dark:border-zinc-800">
+                   <button className="w-full py-5 bg-red-500/10 text-red-500 border border-red-500/20 rounded-[2rem] font-black text-xs uppercase tracking-widest hover:bg-red-500 hover:text-white transition-all">
+                     Purge All Transaction Data
                    </button>
                 </div>
              </div>
 
-             <div className="bg-gradient-to-br from-zinc-900 to-black p-8 rounded-[2.5rem] border border-zinc-800 shadow-2xl relative overflow-hidden flex flex-col justify-between">
-                <div className="absolute top-[-10%] right-[-10%] w-40 h-40 bg-blue-600/20 rounded-full blur-[80px]" />
-                <div className="relative z-10 space-y-4">
-                  <div className="w-12 h-12 bg-white/10 rounded-2xl flex items-center justify-center text-white"><Cpu size={24}/></div>
-                  <h4 className="text-lg font-black text-white leading-tight">Terminal Engine v8.4.2-ENT</h4>
-                  <div className="space-y-2">
-                    <div className="flex justify-between text-[10px] font-bold text-zinc-500 uppercase"><span>Kernel Status</span><span className="text-emerald-500">STABLE</span></div>
-                    <div className="flex justify-between text-[10px] font-bold text-zinc-500 uppercase"><span>Sync Nodes</span><span className="text-blue-400">12 ONLINE</span></div>
-                    <div className="flex justify-between text-[10px] font-bold text-zinc-500 uppercase"><span>Uptime</span><span className="text-white">99.98%</span></div>
-                  </div>
+             {/* Audit Ledger Link */}
+             <div className="bg-zinc-900 text-white rounded-[2.5rem] p-8 flex items-center justify-between hover:scale-[1.02] transition-all cursor-pointer group">
+                <div className="flex items-center gap-6">
+                   <div className="p-4 bg-white/10 rounded-2xl"><FileText size={24}/></div>
+                   <div>
+                      <h4 className="text-lg font-black tracking-tight">Enterprise Audit Ledger</h4>
+                      <p className="text-xs text-zinc-400 font-medium">Review detailed system logs and administrative changes.</p>
+                   </div>
                 </div>
-                <button className="relative z-10 w-full py-4 mt-8 bg-white/10 hover:bg-white/20 backdrop-blur-md rounded-2xl text-[10px] font-black text-white uppercase tracking-[0.2em] transition-all">Check for Core Updates</button>
+                <ChevronRight className="group-hover:translate-x-2 transition-transform" />
              </div>
           </div>
         )}

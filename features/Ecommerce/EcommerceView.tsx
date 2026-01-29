@@ -6,38 +6,21 @@ import {
   Palette, MousePointer2, ExternalLink, BarChart, Package,
   ChevronRight, RefreshCw, Layers, Sparkles, ShoppingCart,
   ArrowLeft, CreditCard, ShieldCheck, Heart, Search, Menu,
-  Trash2, Clock, Truck, MoreHorizontal
+  Trash2
 } from 'lucide-react';
 import { MOCK_PRODUCTS } from '../../mockData';
 import { Product } from '../../types';
-import { formatCurrency, generateId } from '../../utils/helpers';
-
-// --- Types for Web Orders ---
-interface WebOrder {
-  id: string;
-  customerName: string;
-  total: number;
-  items: number;
-  status: 'PENDING' | 'PROCESSING' | 'SHIPPED' | 'COMPLETED';
-  date: string;
-}
-
-const INITIAL_WEB_ORDERS: WebOrder[] = [
-  { id: 'W-9912', customerName: 'Rifat Ahmed', total: 4500, items: 3, status: 'PENDING', date: new Date().toISOString() },
-  { id: 'W-9908', customerName: 'Sarah Islam', total: 1250, items: 1, status: 'SHIPPED', date: new Date(Date.now() - 86400000).toISOString() },
-];
+import { formatCurrency } from '../../utils/helpers';
 
 // --- Storefront Simulation Component ---
 const Storefront: React.FC<{ 
   config: any; 
   products: Product[]; 
   onBack: () => void;
-  onPlaceOrder: (order: WebOrder) => void;
-}> = ({ config, products, onBack, onPlaceOrder }) => {
+}> = ({ config, products, onBack }) => {
   const [cart, setCart] = useState<{product: Product, qty: number}[]>([]);
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
-  const [orderComplete, setOrderComplete] = useState(false);
 
   const onlineProducts = products.filter(p => p.isVisibleOnline);
   const cartCount = cart.reduce((acc, item) => acc + item.qty, 0);
@@ -50,33 +33,6 @@ const Storefront: React.FC<{
       return [...prev, { product, qty: 1 }];
     });
   };
-
-  const handleCheckout = () => {
-    const newOrder: WebOrder = {
-        id: `W-${Math.floor(1000 + Math.random() * 9000)}`,
-        customerName: 'Guest Customer',
-        total: cartTotal,
-        items: cartCount,
-        status: 'PENDING',
-        date: new Date().toISOString()
-    };
-    onPlaceOrder(newOrder);
-    setOrderComplete(true);
-    setCart([]);
-  };
-
-  if (orderComplete) {
-    return (
-        <div className="absolute inset-0 bg-white dark:bg-zinc-950 z-[100] flex flex-col items-center justify-center p-6 animate-in fade-in zoom-in-95">
-             <div className="w-24 h-24 bg-emerald-500 rounded-full flex items-center justify-center text-white mb-8 shadow-2xl shadow-emerald-500/20 animate-bounce">
-                <CheckCircle2 size={48} />
-             </div>
-             <h2 className="text-4xl font-black tracking-tightest mb-4">Order Received!</h2>
-             <p className="text-zinc-500 font-medium text-center max-w-sm mb-10">Thank you for shopping at {config.name}. Your order is being processed by our terminal.</p>
-             <button onClick={onBack} className="px-10 py-5 bg-blue-600 text-white rounded-full font-black text-xs uppercase tracking-widest shadow-xl shadow-blue-600/20 active:scale-95 transition-all">Back to Dashboard</button>
-        </div>
-    );
-  }
 
   return (
     <div className="absolute inset-0 bg-white dark:bg-zinc-950 z-[100] flex flex-col animate-in fade-in zoom-in-95 duration-300">
@@ -251,6 +207,7 @@ const Storefront: React.FC<{
                           <span className="text-sm font-black">{formatCurrency((item.product.offerPrice || item.product.price) * item.qty)}</span>
                        </div>
                        <p className="text-[10px] font-black text-zinc-400 uppercase tracking-widest mt-1">Qty: {item.qty}</p>
+                       {/* Correctly use Trash2 icon after importing it */}
                        <button 
                         onClick={() => setCart(prev => prev.filter(p => p.product.id !== item.product.id))}
                         className="text-[10px] font-black text-red-500 uppercase tracking-widest mt-4 flex items-center gap-1.5 hover:opacity-80 transition-opacity"
@@ -270,11 +227,7 @@ const Storefront: React.FC<{
                 <div className="flex justify-between text-2xl font-black pt-4 border-t border-zinc-100 dark:border-zinc-800">
                    <span>Total</span><span>{formatCurrency(cartTotal)}</span>
                 </div>
-                <button 
-                  disabled={cart.length === 0}
-                  onClick={handleCheckout}
-                  className="w-full py-5 bg-blue-600 text-white rounded-[2rem] font-black text-xs uppercase tracking-widest shadow-xl shadow-blue-600/30 hover:bg-blue-700 transition-all active:scale-95 flex items-center justify-center gap-3 disabled:opacity-50"
-                >
+                <button className="w-full py-5 bg-blue-600 text-white rounded-[2rem] font-black text-xs uppercase tracking-widest shadow-xl shadow-blue-600/30 hover:bg-blue-700 transition-all active:scale-95 flex items-center justify-center gap-3">
                    <CreditCard size={18} /> Checkout
                 </button>
              </div>
@@ -351,10 +304,9 @@ const Storefront: React.FC<{
 };
 
 const EcommerceView: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<'DASHBOARD' | 'CATALOG' | 'ORDERS' | 'BRANDING' | 'PREVIEW'>('DASHBOARD');
+  const [activeTab, setActiveTab] = useState<'DASHBOARD' | 'CATALOG' | 'BRANDING' | 'PREVIEW'>('DASHBOARD');
   const [isStorefrontOpen, setIsStorefrontOpen] = useState(false);
   const [products, setProducts] = useState<Product[]>(MOCK_PRODUCTS.map(p => ({ ...p, isVisibleOnline: true })));
-  const [webOrders, setWebOrders] = useState<WebOrder[]>(INITIAL_WEB_ORDERS);
   
   const [storefrontConfig, setStorefrontConfig] = useState({
     name: 'Ayaat Digital Hub',
@@ -372,21 +324,13 @@ const EcommerceView: React.FC = () => {
 
   const stats = [
     { label: 'Web Visitors', value: '2,405', trend: '+12%', icon: MousePointer2, color: 'text-blue-600' },
-    { label: 'Online Sales', value: formatCurrency(webOrders.reduce((s,o)=>s+o.total, 0)), trend: '+8.4%', icon: ShoppingBag, color: 'text-emerald-500' },
-    { label: 'Pending Orders', value: webOrders.filter(o=>o.status==='PENDING').length.toString(), trend: 'Priority', icon: Clock, color: 'text-amber-500' },
+    { label: 'Online Sales', value: formatCurrency(4250), trend: '+8.4%', icon: ShoppingBag, color: 'text-emerald-500' },
+    { label: 'Conversion', value: '3.2%', trend: '+0.5%', icon: Zap, color: 'text-amber-500' },
     { label: 'Active Sessions', value: '42', trend: 'Live', icon: Globe, color: 'text-purple-500' }
   ];
 
   const toggleOnlineVisibility = (id: string) => {
     setProducts(prev => prev.map(p => p.id === id ? { ...p, isVisibleOnline: !p.isVisibleOnline } : p));
-  };
-
-  const handlePlaceOrder = (order: WebOrder) => {
-    setWebOrders(prev => [order, ...prev]);
-  };
-
-  const updateOrderStatus = (id: string, status: WebOrder['status']) => {
-    setWebOrders(prev => prev.map(o => o.id === id ? { ...o, status } : o));
   };
 
   return (
@@ -396,7 +340,6 @@ const EcommerceView: React.FC = () => {
           config={storefrontConfig} 
           products={products} 
           onBack={() => setIsStorefrontOpen(false)} 
-          onPlaceOrder={handlePlaceOrder}
         />
       )}
 
@@ -422,7 +365,6 @@ const EcommerceView: React.FC = () => {
       <div className="flex items-center gap-2 p-1.5 bg-zinc-100 dark:bg-zinc-900/50 rounded-2xl w-fit shrink-0">
         {[
           { id: 'DASHBOARD', label: 'Overview', icon: BarChart },
-          { id: 'ORDERS', label: 'Web Orders', icon: ShoppingCart },
           { id: 'CATALOG', label: 'Web Catalog', icon: Layers },
           { id: 'BRANDING', label: 'Branding', icon: Palette },
           { id: 'PREVIEW', label: 'Simulation', icon: Smartphone }
@@ -487,79 +429,6 @@ const EcommerceView: React.FC = () => {
                   <button className="relative z-10 w-full py-4 mt-8 bg-white/20 hover:bg-white/30 backdrop-blur-md rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all">Launch Web Ad Campaign</button>
                </div>
             </div>
-          </div>
-        )}
-
-        {activeTab === 'ORDERS' && (
-          <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-[2.5rem] overflow-hidden shadow-sm animate-in fade-in slide-in-from-top-4">
-             <div className="p-8 border-b border-zinc-50 dark:border-zinc-800 flex justify-between items-center bg-zinc-50/50 dark:bg-zinc-800/20">
-                <h3 className="text-xl font-black tracking-tight">Recent Fulfillment</h3>
-                <div className="flex gap-2">
-                   <div className="relative">
-                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400" size={14} />
-                      <input className="bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl py-2 pl-9 pr-4 text-xs font-bold outline-none" placeholder="Search orders..." />
-                   </div>
-                </div>
-             </div>
-             <div className="overflow-x-auto">
-               <table className="w-full text-left border-collapse">
-                 <thead className="bg-zinc-50 dark:bg-zinc-800/40 text-zinc-500 text-[10px] uppercase tracking-widest font-black border-b border-zinc-100 dark:border-zinc-800">
-                   <tr>
-                     <th className="px-10 py-6">Order ID</th>
-                     <th className="px-10 py-6">Customer</th>
-                     <th className="px-10 py-6">Total Value</th>
-                     <th className="px-10 py-6">Status</th>
-                     <th className="px-10 py-6 text-right">Operations</th>
-                   </tr>
-                 </thead>
-                 <tbody className="divide-y divide-zinc-50 dark:divide-zinc-800">
-                    {webOrders.map(order => (
-                      <tr key={order.id} className="hover:bg-zinc-50 dark:hover:bg-zinc-800/20 transition-all">
-                        <td className="px-10 py-6">
-                           <span className="text-xs font-black font-mono text-blue-600">{order.id}</span>
-                           <p className="text-[9px] text-zinc-400 mt-0.5">{new Date(order.date).toLocaleDateString()}</p>
-                        </td>
-                        <td className="px-10 py-6">
-                           <p className="text-sm font-black text-zinc-900 dark:text-zinc-100">{order.customerName}</p>
-                           <p className="text-[10px] text-zinc-500 font-bold uppercase">{order.items} Items Purchased</p>
-                        </td>
-                        <td className="px-10 py-6 font-black text-zinc-900 dark:text-zinc-100">{formatCurrency(order.total)}</td>
-                        <td className="px-10 py-6">
-                           <span className={`px-4 py-1.5 rounded-full text-[9px] font-black uppercase tracking-widest border ${
-                             order.status === 'PENDING' ? 'bg-amber-100 text-amber-700 border-amber-200' :
-                             order.status === 'PROCESSING' ? 'bg-blue-100 text-blue-700 border-blue-200' :
-                             order.status === 'SHIPPED' ? 'bg-purple-100 text-purple-700 border-purple-200' :
-                             'bg-emerald-100 text-emerald-700 border-emerald-200'
-                           }`}>
-                             {order.status}
-                           </span>
-                        </td>
-                        <td className="px-10 py-6 text-right space-x-2">
-                           {order.status === 'PENDING' && (
-                             <button 
-                                onClick={() => updateOrderStatus(order.id, 'PROCESSING')}
-                                className="p-3 bg-zinc-50 dark:bg-zinc-800 rounded-xl text-zinc-400 hover:text-blue-600 border border-zinc-100 dark:border-zinc-700"
-                             >
-                                <RefreshCw size={16} />
-                             </button>
-                           )}
-                           {order.status === 'PROCESSING' && (
-                             <button 
-                                onClick={() => updateOrderStatus(order.id, 'SHIPPED')}
-                                className="p-3 bg-zinc-50 dark:bg-zinc-800 rounded-xl text-zinc-400 hover:text-purple-600 border border-zinc-100 dark:border-zinc-700"
-                             >
-                                <Truck size={16} />
-                             </button>
-                           )}
-                           <button className="p-3 bg-zinc-50 dark:bg-zinc-800 rounded-xl text-zinc-400 hover:text-zinc-900 border border-zinc-100 dark:border-zinc-700">
-                              <MoreHorizontal size={16} />
-                           </button>
-                        </td>
-                      </tr>
-                    ))}
-                 </tbody>
-               </table>
-             </div>
           </div>
         )}
 

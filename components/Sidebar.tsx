@@ -11,8 +11,7 @@ import {
   X,
   Globe
 } from 'lucide-react';
-import { ViewType, UserRole, Language } from '../types';
-import { translations } from '../translations';
+import { ViewType, UserRole } from '../types';
 
 interface SidebarProps {
   currentView: ViewType;
@@ -20,21 +19,18 @@ interface SidebarProps {
   theme?: 'light' | 'dark';
   isOpen: boolean;
   userRole: UserRole;
-  language: Language;
   onClose: () => void;
 }
 
-const Sidebar: React.FC<SidebarProps> = ({ currentView, onViewChange, theme = 'dark', isOpen, userRole, language, onClose }) => {
-  const t = translations[language];
-  
+const Sidebar: React.FC<SidebarProps> = ({ currentView, onViewChange, theme = 'dark', isOpen, userRole, onClose }) => {
   const menuItems = [
-    { id: 'POS', label: t.sidebar.POS, icon: ShoppingCart, roles: [UserRole.ADMIN, UserRole.MANAGER, UserRole.CASHIER] },
-    { id: 'INVENTORY', label: t.sidebar.INVENTORY, icon: Package, roles: [UserRole.ADMIN, UserRole.MANAGER, UserRole.CASHIER] },
-    { id: 'ECOMMERCE', label: t.sidebar.ECOMMERCE, icon: Globe, roles: [UserRole.ADMIN, UserRole.MANAGER] },
-    { id: 'CRM', label: t.sidebar.CRM, icon: Users, roles: [UserRole.ADMIN, UserRole.MANAGER] },
-    { id: 'ANALYTICS', label: t.sidebar.ANALYTICS, icon: BarChart3, roles: [UserRole.ADMIN, UserRole.MANAGER] },
-    { id: 'EMPLOYEES', label: t.sidebar.EMPLOYEES, icon: UserSquare2, roles: [UserRole.ADMIN, UserRole.MANAGER] },
-    { id: 'SETTINGS', label: t.sidebar.SETTINGS, icon: Settings, roles: [UserRole.ADMIN] },
+    { id: 'POS', label: 'Sale Terminal', icon: ShoppingCart, roles: [UserRole.ADMIN, UserRole.MANAGER, UserRole.CASHIER] },
+    { id: 'INVENTORY', label: 'Inventory', icon: Package, roles: [UserRole.ADMIN, UserRole.MANAGER, UserRole.CASHIER] },
+    { id: 'ECOMMERCE', label: 'Digital Shop', icon: Globe, roles: [UserRole.ADMIN, UserRole.MANAGER] },
+    { id: 'CRM', label: 'Customers', icon: Users, roles: [UserRole.ADMIN, UserRole.MANAGER] },
+    { id: 'ANALYTICS', label: 'Analytics', icon: BarChart3, roles: [UserRole.ADMIN, UserRole.MANAGER] },
+    { id: 'EMPLOYEES', label: 'Team', icon: UserSquare2, roles: [UserRole.ADMIN, UserRole.MANAGER] },
+    { id: 'SETTINGS', label: 'Settings', icon: Settings, roles: [UserRole.ADMIN] },
   ];
 
   const filteredItems = menuItems.filter(item => item.roles.includes(userRole));

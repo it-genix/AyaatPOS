@@ -1,11 +1,9 @@
 
 import React, { useState, useMemo, useRef, useEffect } from 'react';
-// Added Globe to lucide-react imports
-import { Search, Plus, Minus, Trash2, CreditCard, Wallet, Banknote, UserPlus, ShoppingCart, Pencil, X, Check, ChevronUp, Sparkles, Timer, Power, UserCheck, Star, SearchX, Delete, ReceiptText, ScanBarcode, AlertTriangle, RefreshCw, Camera, Loader2, CloudUpload, ImagePlus, User, Mail, Phone, Hash, PhoneForwarded, Percent, Printer, Send, QrCode, Settings2, Save, Package, Delete as BackspaceIcon, Zap, Lock, ShieldCheck, UserPlus2, CheckCircle2, Tag, ArrowRight, MapPin, Info, Globe } from 'lucide-react';
-import { Product, CartItem, Customer, UserRole, Language } from '../../types';
+import { Search, Plus, Minus, Trash2, CreditCard, Wallet, Banknote, UserPlus, ShoppingCart, Pencil, X, Check, ChevronUp, Sparkles, Timer, Power, UserCheck, Star, SearchX, Delete, ReceiptText, ScanBarcode, AlertTriangle, RefreshCw, Camera, Loader2, CloudUpload, ImagePlus, User, Mail, Phone, Hash, PhoneForwarded, Percent, Printer, Send, QrCode, Settings2, Save, Package, Delete as BackspaceIcon, Zap, Lock, ShieldCheck, UserPlus2, CheckCircle2, Tag } from 'lucide-react';
+import { Product, CartItem, Customer, UserRole } from '../../types';
 import { MOCK_PRODUCTS, MOCK_CUSTOMERS, CURRENT_USER } from '../../mockData';
 import { formatCurrency, calculateTax, generateId } from '../../utils/helpers';
-import { translations } from '../../translations';
 
 // Helper to determine if an offer is currently valid
 const isOfferActive = (product: Product) => {
@@ -174,7 +172,7 @@ const POSCustomerRegModal: React.FC<POSCustomerRegModalProps> = ({ onClose, onSa
           </div>
 
           <div className="flex gap-3 pt-4">
-            <button type="button" onClick={onClose} className="flex-1 py-4 border border-zinc-200 dark:border-zinc-800 rounded-2xl font-black text-xs uppercase tracking-widest text-zinc-500 hover:bg-zinc-50 transition-all">Discard</button>
+            <button type="button" onClick={onClose} className="flex-1 py-4 border border-zinc-200 dark:border-zinc-700 rounded-2xl font-black text-xs uppercase tracking-widest text-zinc-500 hover:bg-zinc-50 transition-all">Discard</button>
             <button type="submit" className="flex-[1.5] py-4 bg-blue-600 text-white rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-blue-700 transition-all shadow-xl shadow-blue-600/20 flex items-center justify-center gap-2">
               Join & Apply
               <CheckCircle2 size={16} />
@@ -188,12 +186,10 @@ const POSCustomerRegModal: React.FC<POSCustomerRegModalProps> = ({ onClose, onSa
 
 interface POSViewProps {
   onProcessSale: (sale: any) => void;
-  language?: Language;
 }
 
-const POSView: React.FC<POSViewProps> = ({ onProcessSale, language = 'EN' }) => {
+const POSView: React.FC<POSViewProps> = ({ onProcessSale }) => {
   const user = CURRENT_USER;
-  const t = translations[language].pos;
   const isAdmin = user.role === UserRole.ADMIN;
   const isCashier = user.role === UserRole.CASHIER;
 
@@ -299,11 +295,9 @@ const POSView: React.FC<POSViewProps> = ({ onProcessSale, language = 'EN' }) => 
       total, 
       paymentMethod: method, 
       timestamp: new Date().toISOString(), 
-      customerId: selectedCustomer?.id,
-      customerName: selectedCustomer?.name,
+      customerId: selectedCustomer?.id, 
       cashReceived: received,
-      cashierId: user.id,
-      cashierName: user.name
+      cashierId: user.id
     };
     onProcessSale(sale);
     setLastSale(sale);
@@ -329,7 +323,7 @@ const POSView: React.FC<POSViewProps> = ({ onProcessSale, language = 'EN' }) => 
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-400 group-focus-within:text-blue-500" size={20} />
             <input 
               type="text" 
-              placeholder={t.searchProduct} 
+              placeholder="Search product or scan barcode..." 
               className="w-full bg-zinc-50 dark:bg-zinc-900/50 border border-zinc-200 dark:border-zinc-800 rounded-[1.5rem] py-4 pl-12 pr-4 text-zinc-900 dark:text-zinc-100 focus:outline-none focus:ring-4 focus:ring-blue-600/10 transition-all shadow-sm text-sm" 
               value={searchTerm} 
               onChange={(e) => setSearchTerm(e.target.value)} 
@@ -395,7 +389,7 @@ const POSView: React.FC<POSViewProps> = ({ onProcessSale, language = 'EN' }) => 
               <ShoppingCart size={22} />
               <div className="absolute -top-1 -right-1 w-5 h-5 bg-white text-blue-600 rounded-full text-[10px] font-black flex items-center justify-center border-2 border-blue-600">{cart.reduce((s, i) => s + i.quantity, 0)}</div>
             </div>
-            <span className="font-black uppercase tracking-widest text-xs">{t.totalBill}</span>
+            <span className="font-black uppercase tracking-widest text-xs">Total Bill</span>
           </div>
           <div className="flex items-center gap-4">
             <span className="font-black text-2xl tracking-tighter">{formatCurrency(total)}</span>
@@ -408,7 +402,7 @@ const POSView: React.FC<POSViewProps> = ({ onProcessSale, language = 'EN' }) => 
             <div className="hidden lg:flex justify-between items-center mb-2">
               <h2 className="text-2xl font-black flex items-center gap-3 text-zinc-900 dark:text-zinc-100 tracking-tighter">
                 <div className="p-2.5 bg-blue-600 rounded-2xl text-white shadow-lg shadow-blue-600/20"><ShoppingCart size={22} /></div>
-                {t.activeCart}
+                Active Cart
               </h2>
               <button onClick={() => setCart([])} className="text-zinc-400 hover:text-red-500 p-2.5 rounded-xl transition-colors hover:bg-red-50 dark:hover:bg-red-950/20"><Trash2 size={22} /></button>
             </div>
@@ -433,7 +427,7 @@ const POSView: React.FC<POSViewProps> = ({ onProcessSale, language = 'EN' }) => 
                   <UserPlus className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-400 group-focus-within:text-blue-600" size={20} />
                   <input 
                     type="text" 
-                    placeholder={t.searchCustomer} 
+                    placeholder="Search by name or phone..." 
                     className="w-full bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-[1.5rem] py-4 pl-12 pr-4 text-xs font-bold focus:outline-none focus:ring-4 focus:ring-blue-600/10 transition-all shadow-sm" 
                     value={customerSearch} 
                     onFocus={() => setIsCustomerSearchOpen(true)} 
@@ -465,7 +459,7 @@ const POSView: React.FC<POSViewProps> = ({ onProcessSale, language = 'EN' }) => 
                           onClick={() => setShowCustomerRegModal(true)}
                           className="w-full py-4 bg-blue-600 text-white rounded-[1.5rem] font-black text-[10px] uppercase tracking-[0.2em] flex items-center justify-center gap-2 shadow-lg shadow-blue-600/20 hover:bg-blue-700 transition-all active:scale-95"
                         >
-                          <UserPlus2 size={16} /> {t.registerMember}
+                          <UserPlus2 size={16} /> Register New Member
                         </button>
                       </div>
                     </div>
@@ -479,7 +473,7 @@ const POSView: React.FC<POSViewProps> = ({ onProcessSale, language = 'EN' }) => 
             {cart.length === 0 ? (
               <div className="h-full flex flex-col items-center justify-center text-zinc-300 dark:text-zinc-800 py-10">
                 <div className="w-20 h-20 rounded-full border-4 border-dashed border-current mb-4 flex items-center justify-center"><ShoppingCart size={32}/></div>
-                <p className="text-xs font-black uppercase tracking-widest text-center">{t.emptyCart.split(' ').join('\n')}</p>
+                <p className="text-xs font-black uppercase tracking-widest text-center">Baskets Awaiting<br/>Transaction</p>
               </div>
             ) : cart.map(item => (
               <div key={item.id} className="flex items-center gap-4 bg-white dark:bg-zinc-950/50 p-4 rounded-[1.5rem] border border-zinc-200 dark:border-zinc-800 shadow-sm animate-in zoom-in-95 group relative">
@@ -505,8 +499,8 @@ const POSView: React.FC<POSViewProps> = ({ onProcessSale, language = 'EN' }) => 
 
           <div className="p-6 lg:p-10 bg-white dark:bg-zinc-900/50 border-t border-zinc-100 dark:border-zinc-800 space-y-4 shrink-0 shadow-[0_-10px_20px_-10px_rgba(0,0,0,0.05)]">
             <div className="space-y-1.5">
-              <div className="flex justify-between text-zinc-500 text-[11px] font-black uppercase tracking-widest"><span>{t.subtotal}</span><span>{formatCurrency(subtotal)}</span></div>
-              <div className="flex justify-between text-zinc-500 text-[11px] font-black uppercase tracking-widest"><span>{t.tax} (5%)</span><span>{formatCurrency(tax)}</span></div>
+              <div className="flex justify-between text-zinc-500 text-[11px] font-black uppercase tracking-widest"><span>Subtotal</span><span>{formatCurrency(subtotal)}</span></div>
+              <div className="flex justify-between text-zinc-500 text-[11px] font-black uppercase tracking-widest"><span>Tax (5%)</span><span>{formatCurrency(tax)}</span></div>
               {selectedCustomer && (
                 <div className="flex justify-between text-emerald-600 text-[11px] font-black uppercase tracking-widest animate-in slide-in-from-right-2">
                   <div className="flex items-center gap-2">
@@ -524,7 +518,7 @@ const POSView: React.FC<POSViewProps> = ({ onProcessSale, language = 'EN' }) => 
             </div>
             
             <div className="flex justify-between text-zinc-900 dark:text-white font-black text-3xl pt-5 border-t border-zinc-100 dark:border-zinc-800 leading-none mt-2 tracking-tighter">
-              <span>{t.total}</span>
+              <span>Total</span>
               <span className="text-blue-600 dark:text-blue-400">{formatCurrency(total)}</span>
             </div>
 
@@ -543,7 +537,7 @@ const POSView: React.FC<POSViewProps> = ({ onProcessSale, language = 'EN' }) => 
                   }`}>
                     {method === 'CASH' ? <Banknote size={22} /> : method === 'CARD' ? <CreditCard size={22} /> : <Wallet size={22} />}
                   </div>
-                  <span className="text-[9px] font-black uppercase tracking-widest opacity-60 group-hover:opacity-100">{t[method.toLowerCase() as keyof typeof t]}</span>
+                  <span className="text-[9px] font-black uppercase tracking-widest opacity-60 group-hover:opacity-100">{method}</span>
                 </button>
               ))}
             </div>
@@ -625,113 +619,44 @@ const ProductModal: React.FC<{ product?: Product | null; prefilledSku?: string; 
   );
 };
 
-// --- Standard & Professional Cash Calculator Modal ---
 const CashCalculatorModal: React.FC<{ total: number; onClose: () => void; onComplete: (received: number) => void }> = ({ total, onClose, onComplete }) => {
   const [receivedStr, setReceivedStr] = useState<string>('');
   const receivedNum = parseFloat(receivedStr) || 0;
-  const change = receivedNum - total;
+  const change = Math.max(0, receivedNum - total);
   const isSufficient = receivedNum >= total;
 
   const handleKeypad = (val: string) => {
     if (val === 'CLEAR') setReceivedStr('');
     else if (val === 'BACK') setReceivedStr(prev => prev.slice(0, -1));
-    else if (val === '.') { if (!receivedStr.includes('.')) setReceivedStr(prev => + '.'); }
+    else if (val === '.') { if (!receivedStr.includes('.')) setReceivedStr(prev => prev + '.'); }
     else { if (receivedStr === '0') setReceivedStr(val); else setReceivedStr(prev => prev + val); }
   };
 
-  const handleDenomination = (val: number) => {
-    setReceivedStr(prev => {
-        const current = parseFloat(prev) || 0;
-        return (current + val).toString();
-    });
-  };
-
-  const denominations = [10, 20, 50, 100, 200, 500, 1000];
-
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-md p-4 animate-in fade-in duration-300">
-      <div className="bg-white dark:bg-zinc-900 w-full max-w-2xl rounded-[3rem] overflow-hidden shadow-2xl flex flex-col md:flex-row h-full max-h-[700px]">
-        {/* Left Side: Display & Denominations */}
-        <div className="flex-1 flex flex-col bg-zinc-50 dark:bg-zinc-950/30">
-          <div className="p-8 border-b border-zinc-200 dark:border-zinc-800 space-y-4">
-            <h3 className="text-[10px] font-black uppercase tracking-widest text-zinc-400 flex items-center gap-2">
-              <Banknote size={14} className="text-emerald-500" /> Cash Payment Terminal
-            </h3>
-            <div className="flex justify-between items-end">
-              <div>
-                <p className="text-[10px] font-black text-zinc-400 uppercase tracking-widest">Payable Amount</p>
-                <p className="text-2xl font-black text-zinc-900 dark:text-zinc-100">{formatCurrency(total)}</p>
-              </div>
-              <div className="text-right">
-                <p className={`text-[10px] font-black uppercase tracking-widest ${isSufficient ? 'text-emerald-500' : 'text-red-500'}`}>
-                  {isSufficient ? 'Balance Change' : 'Remaining Due'}
-                </p>
-                <p className={`text-2xl font-black ${isSufficient ? 'text-emerald-600' : 'text-red-600'}`}>
-                  {formatCurrency(Math.abs(change))}
-                </p>
-              </div>
-            </div>
-            <div className="mt-6 p-6 bg-white dark:bg-zinc-900 rounded-[2rem] border-2 border-blue-600 shadow-xl shadow-blue-600/5">
-                <p className="text-[9px] font-black uppercase text-blue-600 mb-1">Cash Received</p>
-                <div className="text-4xl font-black tracking-tight text-right flex items-center justify-between">
-                   <span className="text-zinc-300 text-2xl font-medium">৳</span>
-                   <span>{receivedStr || '0.00'}</span>
-                </div>
-            </div>
-          </div>
-          
-          <div className="p-8 space-y-4 overflow-y-auto custom-scrollbar flex-1">
-             <p className="text-[10px] font-black uppercase tracking-widest text-zinc-400 mb-2 ml-1">Quick Denominations</p>
-             <div className="grid grid-cols-2 xs:grid-cols-4 gap-3">
-                <button 
-                    onClick={() => setReceivedStr(total.toString())}
-                    className="col-span-full py-4 bg-emerald-600 text-white rounded-2xl font-black text-xs uppercase tracking-widest flex items-center justify-center gap-2 shadow-lg shadow-emerald-600/20 active:scale-95 transition-all mb-2"
-                >
-                    <CheckCircle2 size={16} /> Exact Amount
-                </button>
-                {denominations.map(val => (
-                  <button 
-                    key={val} 
-                    onClick={() => handleDenomination(val)}
-                    className="p-4 bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-2xl font-black text-xs hover:bg-emerald-500 hover:text-white hover:border-emerald-600 transition-all active:scale-95 shadow-sm"
-                  >
-                    ৳{val}
-                  </button>
-                ))}
-             </div>
-          </div>
+    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/70 backdrop-blur-md p-4">
+      <div className="bg-white dark:bg-zinc-900 w-full max-w-lg rounded-[2.5rem] overflow-hidden shadow-2xl flex flex-col">
+        <div className="p-6 border-b border-zinc-100 dark:border-zinc-800 flex justify-between items-center bg-zinc-50 dark:bg-zinc-800/50">
+          <h3 className="font-black text-xl flex items-center gap-2"><Banknote size={20} /> Cash Process</h3>
+          <button onClick={onClose} className="p-2 hover:bg-zinc-200 dark:hover:bg-zinc-700 rounded-xl transition-colors"><X size={20}/></button>
         </div>
-
-        {/* Right Side: Keypad & Action */}
-        <div className="w-full md:w-[280px] bg-white dark:bg-zinc-900 border-l border-zinc-200 dark:border-zinc-800 flex flex-col">
-           <div className="flex-1 p-8 grid grid-cols-3 gap-2">
+        <div className="p-6 space-y-6">
+           <div className="grid grid-cols-2 gap-4">
+              <div className="p-4 bg-zinc-50 dark:bg-zinc-800/50 rounded-2xl border border-zinc-100 dark:border-zinc-800 text-center">
+                <p className="text-[10px] font-black uppercase tracking-widest text-zinc-400">Total</p>
+                <h4 className="text-xl font-black">{formatCurrency(total)}</h4>
+              </div>
+              <div className={`p-4 rounded-2xl border text-center ${isSufficient ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-600' : 'bg-red-500/10 border-red-500/20 text-red-500'}`}>
+                <p className="text-[10px] font-black uppercase tracking-widest">{isSufficient ? 'Change' : 'Remaining'}</p>
+                <h4 className="text-xl font-black">{formatCurrency(Math.abs(change))}</h4>
+              </div>
+           </div>
+           <div className="w-full bg-zinc-100 dark:bg-zinc-950 rounded-3xl p-6 text-4xl font-black text-blue-600 text-right">{receivedStr ? `৳${receivedStr}` : '৳0'}</div>
+           <div className="grid grid-cols-3 gap-2">
              {['1', '2', '3', '4', '5', '6', '7', '8', '9', '.', '0', 'BACK'].map(k => (
-               <button 
-                 key={k} 
-                 onClick={() => handleKeypad(k)} 
-                 className={`h-full min-h-[60px] rounded-2xl font-black text-lg flex items-center justify-center transition-all active:scale-90 shadow-sm ${
-                   k === 'BACK' ? 'bg-red-50 dark:bg-red-950/20 text-red-500' : 'bg-zinc-50 dark:bg-zinc-800 text-zinc-900 dark:text-white'
-                 }`}
-               >
-                 {k === 'BACK' ? <BackspaceIcon size={20}/> : k}
-               </button>
+               <button key={k} onClick={() => handleKeypad(k)} className="h-16 rounded-2xl bg-zinc-50 dark:bg-zinc-800/50 hover:bg-zinc-100 font-bold active:scale-95 transition-all">{k === 'BACK' ? <BackspaceIcon size={20}/> : k}</button>
              ))}
            </div>
-           <div className="p-8 space-y-3 bg-zinc-50 dark:bg-zinc-950/20 border-t border-zinc-200 dark:border-zinc-800">
-              <button 
-                onClick={onClose} 
-                className="w-full py-4 bg-white dark:bg-zinc-800 text-zinc-400 rounded-2xl font-black text-[10px] uppercase tracking-widest border border-zinc-200 dark:border-zinc-700 active:scale-95 transition-all"
-              >
-                Cancel Process
-              </button>
-              <button 
-                disabled={!isSufficient} 
-                onClick={() => onComplete(receivedNum)} 
-                className="w-full py-6 bg-blue-600 text-white rounded-[2rem] font-black text-xs uppercase tracking-widest shadow-2xl shadow-blue-600/30 flex items-center justify-center gap-3 active:scale-95 transition-all disabled:opacity-50 disabled:scale-100 disabled:shadow-none"
-              >
-                Process Transaction <ArrowRight size={18} />
-              </button>
-           </div>
+           <button disabled={!isSufficient} onClick={() => onComplete(receivedNum)} className="w-full py-5 bg-emerald-600 text-white rounded-[2rem] font-black uppercase text-sm tracking-widest disabled:opacity-50 transition-all active:scale-95">Complete Payment</button>
         </div>
       </div>
     </div>
@@ -807,122 +732,22 @@ const DiscountRateModal: React.FC<{ currentRate: number; onClose: () => void; on
   );
 };
 
-// --- Professional Receipt Modal Component ---
 const ReceiptModal: React.FC<{ sale: any; userRole: UserRole; onClose: () => void }> = ({ sale, userRole, onClose }) => {
-  const handlePrint = () => {
-    window.print();
-  };
-
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-lg p-4 animate-in fade-in no-print">
-      <div className="bg-white dark:bg-zinc-900 w-full max-w-lg rounded-[3rem] overflow-hidden shadow-2xl flex flex-col h-full max-h-[90vh]">
-        
-        {/* Receipt Scrollable Content */}
-        <div className="flex-1 overflow-y-auto custom-scrollbar p-10 space-y-8 bg-white text-zinc-900 font-mono text-xs">
-          {/* Header */}
-          <div className="text-center space-y-4">
-            <div className="w-20 h-20 bg-blue-600 rounded-3xl mx-auto flex items-center justify-center text-white font-black text-4xl shadow-xl shadow-blue-600/20">A</div>
-            <div className="space-y-1">
-              <h2 className="text-2xl font-black tracking-tightest uppercase leading-none">Ayaat Retail Ltd.</h2>
-              <p className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Enterprise POS Solutions</p>
-            </div>
-            <div className="pt-2 text-[10px] space-y-1 text-zinc-500">
-               <div className="flex items-center justify-center gap-2"><MapPin size={10}/> House #12, Road #4, Banani, Dhaka</div>
-               <div className="flex items-center justify-center gap-2"><Phone size={10}/> Support: +880 1711-223344</div>
-               <div className="flex items-center justify-center gap-2"><Globe size={10}/> www.ayaatpos.com</div>
-               <div className="pt-1 font-black">BIN: 002345678-0101</div>
-            </div>
-          </div>
-
-          <div className="border-t border-b border-dashed border-zinc-300 py-4 flex flex-col gap-1 text-[10px]">
-             <div className="flex justify-between"><span>INV NO:</span><span className="font-black">{sale.id}</span></div>
-             <div className="flex justify-between"><span>DATE:</span><span>{new Date(sale.timestamp).toLocaleString()}</span></div>
-             <div className="flex justify-between"><span>OPERATOR:</span><span className="uppercase">{sale.cashierName || 'CASHIER'}</span></div>
-             {sale.customerName && <div className="flex justify-between"><span>CUSTOMER:</span><span className="uppercase">{sale.customerName}</span></div>}
-          </div>
-
-          {/* Item List */}
-          <div className="space-y-4">
-             <div className="flex justify-between font-black border-b border-zinc-200 pb-2 text-[10px]">
-                <span className="w-1/2">DESCRIPTION</span>
-                <span className="w-1/4 text-right">QTY</span>
-                <span className="w-1/4 text-right">PRICE</span>
-             </div>
-             <div className="space-y-3">
-                {sale.items.map((item: any) => (
-                  <div key={item.id} className="flex justify-between leading-tight">
-                    <div className="w-1/2">
-                      <p className="font-bold uppercase">{item.name}</p>
-                      <p className="text-[9px] text-zinc-400">{item.sku}</p>
-                    </div>
-                    <span className="w-1/4 text-right">{item.quantity}</span>
-                    <span className="w-1/4 text-right">{formatCurrency(item.price * item.quantity)}</span>
-                  </div>
-                ))}
-             </div>
-          </div>
-
-          {/* Financials */}
-          <div className="border-t border-zinc-200 pt-4 space-y-1.5">
-             <div className="flex justify-between"><span>SUBTOTAL</span><span>{formatCurrency(sale.subtotal)}</span></div>
-             <div className="flex justify-between"><span>TAX (5%)</span><span>{formatCurrency(sale.tax)}</span></div>
-             {sale.discount > 0 && (
-               <div className="flex justify-between text-red-500"><span>DISCOUNT APPLIED</span><span>-{formatCurrency(sale.discount)}</span></div>
-             )}
-             <div className="flex justify-between font-black text-lg pt-3 border-t border-dashed border-zinc-300 mt-2">
-                <span>TOTAL DUE</span>
-                <span>{formatCurrency(sale.total)}</span>
-             </div>
-          </div>
-
-          {/* Payment Detail */}
-          <div className="bg-zinc-50 p-4 rounded-2xl border border-zinc-100 space-y-1.5">
-             <div className="flex justify-between items-center"><span className="text-[10px] font-bold uppercase">Payment Mode</span><span className="px-2 py-0.5 bg-blue-600 text-white rounded-md text-[9px] font-black uppercase tracking-widest">{sale.paymentMethod}</span></div>
-             {sale.paymentMethod === 'CASH' && (
-               <>
-                 <div className="flex justify-between"><span>Amount Received</span><span>{formatCurrency(sale.cashReceived || sale.total)}</span></div>
-                 <div className="flex justify-between font-bold"><span>Change Returned</span><span>{formatCurrency((sale.cashReceived || sale.total) - sale.total)}</span></div>
-               </>
-             )}
-          </div>
-
-          {/* Footer & Barcode */}
-          <div className="text-center space-y-6 pt-6">
-             <div className="space-y-1">
-               <p className="font-black text-[10px] uppercase">Thank you for your visit!</p>
-               <p className="text-[9px] text-zinc-400 italic">Goods once sold are only exchangeable within 7 days with valid receipt and original packaging.</p>
-             </div>
-             
-             {/* Simulated Barcode */}
-             <div className="flex flex-col items-center gap-2">
-                <div className="flex items-center gap-1 h-12">
-                   {[...Array(40)].map((_, i) => (
-                     <div key={i} className="bg-black" style={{ width: `${Math.random() > 0.5 ? 2 : 1}px`, height: '100%', opacity: Math.random() > 0.1 ? 1 : 0.2 }} />
-                   ))}
-                </div>
-                <span className="text-[9px] font-bold tracking-[0.4em]">{sale.id}</span>
-             </div>
-
-             <div className="text-[8px] text-zinc-300 uppercase tracking-widest">
-                Ayaat Terminal Engine v8.4.2-ENT
-             </div>
-          </div>
+    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-lg p-4 animate-in fade-in">
+      <div className="bg-white dark:bg-zinc-900 w-full max-w-md rounded-[3rem] p-10 space-y-8 flex flex-col">
+        <div className="text-center space-y-3">
+           <div className="w-16 h-16 bg-blue-600 rounded-2xl mx-auto flex items-center justify-center text-white font-black text-2xl">A</div>
+           <h4 className="text-xl font-black">Transaction Successful</h4>
+           <p className="text-zinc-400 font-mono text-[10px] uppercase tracking-widest">{sale.id}</p>
         </div>
-
-        {/* Action Bar */}
-        <div className="p-8 bg-zinc-50 dark:bg-zinc-800/50 border-t border-zinc-200 dark:border-zinc-800 flex gap-4">
-          <button onClick={onClose} className="flex-1 py-5 border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 rounded-[2rem] font-black uppercase text-xs tracking-widest text-zinc-500 hover:bg-zinc-50 transition-all active:scale-95">
-             Dismiss
-          </button>
-          <button onClick={handlePrint} className="flex-[1.5] py-5 bg-blue-600 text-white rounded-[2rem] font-black uppercase text-xs tracking-widest shadow-xl shadow-blue-600/20 flex items-center justify-center gap-3 hover:bg-blue-700 transition-all active:scale-95">
-             <Printer size={18} /> Print Receipt
-          </button>
+        <div className="flex-1 border-t border-b border-dashed border-zinc-200 py-6 font-mono text-xs space-y-2 overflow-y-auto max-h-[200px]">
+           {sale.items.map((i: any) => (
+             <div key={i.id} className="flex justify-between"><span>{i.quantity}x {i.name}</span><span>{formatCurrency(i.price * i.quantity)}</span></div>
+           ))}
+           <div className="border-t border-zinc-100 pt-4 flex justify-between font-black text-base"><span>TOTAL</span><span>{formatCurrency(sale.total)}</span></div>
         </div>
-      </div>
-
-      {/* Printer-only hidden element for actual window.print() style */}
-      <div className="print-only fixed inset-0 bg-white z-[1000] p-10 font-mono text-[12pt]">
-        {/* Actual simplified print markup can go here if needed, but styling the modal is usually enough for modern browsers */}
+        <button onClick={onClose} className="w-full py-5 bg-blue-600 text-white rounded-[2rem] font-black uppercase text-sm tracking-widest shadow-xl shadow-blue-600/20 active:scale-95 transition-all">Close</button>
       </div>
     </div>
   );

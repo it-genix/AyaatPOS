@@ -9,9 +9,8 @@ import EmployeeManagementView from './features/Employees/EmployeeManagementView'
 import SettingsView from './features/Settings/SettingsView';
 import EcommerceView from './features/Ecommerce/EcommerceView';
 import LoginView from './features/Auth/LoginView';
-import { ViewType, User, Language } from './types';
-import { translations } from './translations';
-import { Bell, User as UserIcon, Sun, Moon, Maximize, Minimize, Menu, LogOut, Languages } from 'lucide-react';
+import { ViewType, User } from './types';
+import { Bell, User as UserIcon, Sun, Moon, Maximize, Minimize, Menu, LogOut } from 'lucide-react';
 
 const App: React.FC = () => {
   const [currentView, setCurrentView] = useState<ViewType>('POS');
@@ -19,25 +18,13 @@ const App: React.FC = () => {
   const [isOffline, setIsOffline] = useState(!navigator.onLine);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
-  const [language, setLanguage] = useState<Language>(() => {
-    const saved = localStorage.getItem('language');
-    return (saved as Language) || 'EN';
-  });
   const [theme, setTheme] = useState<'light' | 'dark'>(() => {
     const saved = localStorage.getItem('theme');
     return (saved as 'light' | 'dark') || 'dark';
   });
 
-  const t = translations[language];
-
   const toggleTheme = () => {
     setTheme(prev => (prev === 'light' ? 'dark' : 'light'));
-  };
-
-  const toggleLanguage = () => {
-    const newLang = language === 'EN' ? 'BN' : 'EN';
-    setLanguage(newLang);
-    localStorage.setItem('language', newLang);
   };
 
   const toggleFullscreen = () => {
@@ -94,7 +81,7 @@ const App: React.FC = () => {
 
   const renderView = () => {
     switch (currentView) {
-      case 'POS': return <POSView language={language} onProcessSale={(sale) => console.log('Sale saved:', sale)} />;
+      case 'POS': return <POSView onProcessSale={(sale) => console.log('Sale saved:', sale)} />;
       case 'INVENTORY': return <InventoryView />;
       case 'CRM': return <CRMView />;
       case 'ANALYTICS': return <AnalyticsView />;
@@ -120,7 +107,6 @@ const App: React.FC = () => {
         theme={theme} 
         isOpen={sidebarOpen}
         userRole={user.role}
-        language={language}
         onClose={() => setSidebarOpen(false)}
       />
 
@@ -137,25 +123,16 @@ const App: React.FC = () => {
               {isOffline && (
                 <div className="flex items-center gap-1.5 px-2 py-0.5 bg-amber-500/10 text-amber-500 text-[9px] font-bold rounded-full border border-amber-500/20 shrink-0">
                   <span className="w-1 h-1 bg-amber-500 rounded-full animate-pulse"></span>
-                  {t.header.offline}
+                  OFFLINE
                 </div>
               )}
               <div className={`text-[10px] sm:text-xs lg:text-sm font-medium truncate ${theme === 'dark' ? 'text-zinc-400' : 'text-zinc-500'}`}>
-                {t.header.terminal} #01 <span className={`hidden xs:inline mx-1 sm:mx-2 ${theme === 'dark' ? 'text-zinc-700' : 'text-zinc-200'}`}>|</span> <span className={`hidden md:inline ${theme === 'dark' ? 'text-zinc-500' : 'text-zinc-400'}`}>{new Date().toLocaleDateString(language === 'EN' ? 'en-US' : 'bn-BD', { weekday: 'short', month: 'short', day: 'numeric' })}</span>
+                Terminal #01 <span className={`hidden xs:inline mx-1 sm:mx-2 ${theme === 'dark' ? 'text-zinc-700' : 'text-zinc-200'}`}>|</span> <span className={`hidden md:inline ${theme === 'dark' ? 'text-zinc-500' : 'text-zinc-400'}`}>{new Date().toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}</span>
               </div>
             </div>
           </div>
 
           <div className="flex items-center gap-1.5 sm:gap-3 lg:gap-6 shrink-0">
-            <button 
-              onClick={toggleLanguage}
-              className={`flex items-center gap-2 px-3 py-2 rounded-xl transition-all duration-300 font-bold text-[10px] uppercase tracking-widest ${theme === 'dark' ? 'bg-zinc-900 text-blue-400 hover:bg-zinc-800' : 'bg-zinc-100 text-blue-600 hover:bg-zinc-200'}`}
-              title="Toggle Language"
-            >
-              <Languages size={18} />
-              <span className="hidden sm:inline">{language === 'EN' ? 'বাংলা' : 'English'}</span>
-            </button>
-
             <button 
               onClick={toggleFullscreen}
               className={`hidden sm:flex p-2 rounded-full transition-all duration-300 items-center justify-center ${theme === 'dark' ? 'text-zinc-400 bg-zinc-900 hover:bg-zinc-800 hover:text-white' : 'text-zinc-500 bg-zinc-100 hover:bg-zinc-200 hover:text-zinc-900'}`}
