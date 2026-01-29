@@ -1,0 +1,7 @@
+{
+  "name": "AyaatPOS",
+  "description": "A high-performance, modular Point of Sale system featuring real-time inventory tracking, AI-powered sales analytics, CRM loyalty integration, and multi-payment processing.",
+  "requestFramePermissions": [
+    "camera"
+  ]
+}
