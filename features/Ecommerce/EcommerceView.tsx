@@ -207,7 +207,6 @@ const Storefront: React.FC<{
                           <span className="text-sm font-black">{formatCurrency((item.product.offerPrice || item.product.price) * item.qty)}</span>
                        </div>
                        <p className="text-[10px] font-black text-zinc-400 uppercase tracking-widest mt-1">Qty: {item.qty}</p>
-                       {/* Correctly use Trash2 icon after importing it */}
                        <button 
                         onClick={() => setCart(prev => prev.filter(p => p.product.id !== item.product.id))}
                         className="text-[10px] font-black text-red-500 uppercase tracking-widest mt-4 flex items-center gap-1.5 hover:opacity-80 transition-opacity"
@@ -265,7 +264,7 @@ const Storefront: React.FC<{
                  </div>
                  
                  <p className="text-zinc-500 font-medium leading-relaxed">
-                   Experience the next generation of {selectedProduct.category.toLowerCase()}. Designed with precision and crafted for reliability, the {selectedProduct.name} offers unparalleled performance for the modern digital era.
+                   {selectedProduct.description || `Experience the next generation of ${selectedProduct.category.toLowerCase()}. Designed with precision and crafted for reliability, the ${selectedProduct.name} offers unparalleled performance for the modern digital era.`}
                  </p>
                  
                  <div className="space-y-6 pt-6">
@@ -560,7 +559,7 @@ const EcommerceView: React.FC = () => {
              </div>
              
              {/* Mock Phone Preview */}
-             <div className="w-full max-w-sm h-full bg-white dark:bg-zinc-900 rounded-[3.5rem] border-[10px] border-zinc-900 dark:border-zinc-800 shadow-[0_50px_100px_-20px_rgba(0,0,0,0.5)] overflow-hidden flex flex-col relative group">
+             <div className="w-full max-sm h-full bg-white dark:bg-zinc-900 rounded-[3.5rem] border-[10px] border-zinc-900 dark:border-zinc-800 shadow-[0_50px_100px_-20px_rgba(0,0,0,0.5)] overflow-hidden flex flex-col relative group">
                 <div className="absolute top-0 inset-x-0 h-6 bg-zinc-900 dark:bg-zinc-800 flex items-center justify-center z-20">
                    <div className="w-24 h-5 bg-black rounded-b-[1.2rem]" />
                 </div>

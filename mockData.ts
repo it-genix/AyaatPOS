@@ -25,6 +25,7 @@ export const MOCK_PRODUCTS: Product[] = [
     id: '1', 
     sku: 'ELEC-001', 
     name: 'Ultra Wireless Mouse', 
+    description: 'A high-precision wireless mouse with ergonomic design, featuring a 16,000 DPI sensor and up to 50 hours of battery life on a single charge.',
     category: 'Electronics', 
     price: 45.99, 
     offerPrice: 39.99,
@@ -39,6 +40,7 @@ export const MOCK_PRODUCTS: Product[] = [
     id: '2', 
     sku: 'ELEC-002', 
     name: 'Mechanical Keyboard RGB', 
+    description: 'Tenkeyless mechanical gaming keyboard with customizable RGB backlighting and tactile Blue switches for satisfying typing feedback.',
     category: 'Electronics', 
     price: 129.99, 
     cost: 65.00, 
@@ -52,6 +54,7 @@ export const MOCK_PRODUCTS: Product[] = [
     id: '3', 
     sku: 'ACC-001', 
     name: 'USB-C Fast Charger', 
+    description: 'Universal 65W USB-C power delivery charger, compact GaN technology for fast charging laptops, tablets, and smartphones.',
     category: 'Accessories', 
     price: 24.50, 
     offerPrice: 19.99,
@@ -66,6 +69,7 @@ export const MOCK_PRODUCTS: Product[] = [
     id: '4', 
     sku: 'AUDIO-001', 
     name: 'Noise Cancelling Headphones', 
+    description: 'Premium over-ear headphones with industry-leading active noise cancellation, high-fidelity audio, and comfortable memory foam ear cushions.',
     category: 'Audio', 
     price: 299.00, 
     offerPrice: 249.00,
@@ -80,6 +84,7 @@ export const MOCK_PRODUCTS: Product[] = [
     id: '5', 
     sku: 'STORAGE-001', 
     name: '1TB External SSD', 
+    description: 'Portable high-speed SSD with read speeds up to 1050MB/s. Rugged design with IP55 water and dust resistance for reliable data storage on the go.',
     category: 'Storage', 
     price: 89.99, 
     cost: 45.00, 
@@ -92,8 +97,8 @@ export const MOCK_PRODUCTS: Product[] = [
 ];
 
 export const MOCK_CUSTOMERS: Customer[] = [
-  { id: 'c1', membershipId: 'MEM-7742', name: 'John Doe', email: 'john@example.com', phone: '555-0101', loyaltyPoints: 450, totalSpent: 1240.50, joinDate: '2023-01-15' },
-  { id: 'c2', membershipId: 'MEM-9103', name: 'Jane Smith', email: 'jane@example.com', phone: '555-0102', loyaltyPoints: 120, totalSpent: 340.20, joinDate: '2023-05-20' },
+  { id: 'c1', membershipId: 'MEM-7742', name: 'John Doe', email: 'john@example.com', phone: '555-0101', loyaltyPoints: 450, totalSpent: 1240.50, joinDate: '2023-01-15', discountLevel: 5 },
+  { id: 'c2', membershipId: 'MEM-9103', name: 'Jane Smith', email: 'jane@example.com', phone: '555-0102', loyaltyPoints: 120, totalSpent: 340.20, joinDate: '2023-05-20', discountLevel: 0 },
 ];
 
 export const CURRENT_USER: User = MOCK_USERS[0];

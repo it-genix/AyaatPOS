@@ -39,6 +39,7 @@ export interface Product {
   id: string;
   sku: string;
   name: string;
+  description?: string;
   category: string;
   price: number;
   offerPrice?: number;
@@ -62,6 +63,7 @@ export interface Customer {
   loyaltyPoints: number;
   totalSpent: number;
   joinDate: string;
+  discountLevel: number; // Added field for membership percentage discount
 }
 
 export interface CartItem extends Product {
@@ -82,3 +84,9 @@ export interface Sale {
 }
 
 export type ViewType = 'POS' | 'INVENTORY' | 'CRM' | 'ANALYTICS' | 'EMPLOYEES' | 'SETTINGS' | 'ECOMMERCE';
+
+/**
+ * Supported UI languages for the application.
+ * Added to fix missing export error in POSView.tsx
+ */
+export type Language = 'EN' | 'BN';

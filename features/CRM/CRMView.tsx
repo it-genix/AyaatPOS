@@ -1,7 +1,8 @@
+
 import React, { useState, useMemo } from 'react';
-import { Users, Search, Plus, Mail, Phone, History, Edit, X, Star, ChevronDown, ChevronUp, ShoppingBag, Calendar, ReceiptText, Tag, UserPlus, CheckCircle2 } from 'lucide-react';
-import { MOCK_CUSTOMERS } from '../../mockData';
-import { Customer, Sale } from '../../types';
+import { Users, Search, Plus, Mail, Phone, History, Edit, X, Star, ChevronDown, ChevronUp, ShoppingBag, Calendar, ReceiptText, Tag, UserPlus, CheckCircle2, Percent, ShieldCheck } from 'lucide-react';
+import { MOCK_CUSTOMERS, CURRENT_USER } from '../../mockData';
+import { Customer, Sale, UserRole } from '../../types';
 import { formatCurrency, generateId } from '../../utils/helpers';
 
 // Helper to generate dummy sales for the history view
@@ -32,6 +33,9 @@ interface CustomerModalProps {
 
 const CustomerModal: React.FC<CustomerModalProps> = ({ customer, onClose, onSave }) => {
   const isEdit = !!customer;
+  const user = CURRENT_USER;
+  const canEditDiscount = user.role === UserRole.ADMIN || user.role === UserRole.MANAGER;
+
   const [formData, setFormData] = useState<Partial<Customer>>(customer || {
     name: '', 
     email: '', 
@@ -39,6 +43,7 @@ const CustomerModal: React.FC<CustomerModalProps> = ({ customer, onClose, onSave
     membershipId: `MEM-${Math.floor(10000 + Math.random() * 90000)}`, 
     loyaltyPoints: 0, 
     totalSpent: 0,
+    discountLevel: 0
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -48,6 +53,12 @@ const CustomerModal: React.FC<CustomerModalProps> = ({ customer, onClose, onSave
     if (!formData.name?.trim()) newErrors.name = 'Full name is required';
     if (!formData.email?.match(/^[^\s@]+@[^\s@]+\.[^\s@]+$/)) newErrors.email = 'Valid email is required';
     if (!formData.phone?.trim()) newErrors.phone = 'Phone number is required';
+    
+    const discount = Number(formData.discountLevel);
+    if (isNaN(discount) || discount < 0 || discount > 100) {
+      newErrors.discount = 'Discount must be between 0 and 100';
+    }
+    
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -58,7 +69,8 @@ const CustomerModal: React.FC<CustomerModalProps> = ({ customer, onClose, onSave
       onSave({ 
         ...formData, 
         id: formData.id || generateId(), 
-        joinDate: formData.joinDate || new Date().toISOString() 
+        joinDate: formData.joinDate || new Date().toISOString(),
+        discountLevel: Number(formData.discountLevel) || 0
       } as Customer);
     }
   };
@@ -133,12 +145,47 @@ const CustomerModal: React.FC<CustomerModalProps> = ({ customer, onClose, onSave
                   <input 
                     type="tel" 
                     placeholder="Phone Number"
-                    className={`w-full bg-zinc-50 dark:bg-zinc-800 border ${errors.phone ? 'border-red-500' : 'border-zinc-200 dark:border-zinc-700'} rounded-2xl py-4 px-5 font-bold outline-none focus:ring-4 focus:ring-blue-600/10 transition-all text-sm`} 
+                    className={`w-full bg-zinc-50 dark:bg-zinc-900 border ${errors.phone ? 'border-red-500' : 'border-zinc-200 dark:border-zinc-700'} rounded-2xl py-4 px-5 font-bold outline-none focus:ring-4 focus:ring-blue-600/10 transition-all text-sm`} 
                     value={formData.phone} 
                     onChange={e => setFormData({...formData, phone: e.target.value})} 
                     required 
                   />
                   {errors.phone && <p className="text-[9px] font-black text-red-500 uppercase mt-1 ml-1">{errors.phone}</p>}
+                </div>
+              </div>
+            </div>
+
+            {/* NEW: Loyalty & Perks Section */}
+            <div className="space-y-2 pt-2">
+              <div className="flex items-center gap-2 ml-1">
+                <label className="text-[10px] font-black uppercase tracking-widest text-zinc-400">Loyalty & Perks</label>
+                {!canEditDiscount && <ShieldCheck size={10} className="text-zinc-300" />}
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="p-4 bg-zinc-50 dark:bg-zinc-800/50 border border-zinc-100 dark:border-zinc-700 rounded-2xl">
+                   <div className="flex justify-between items-center mb-1">
+                      <p className="text-[8px] font-black text-zinc-400 uppercase tracking-tighter">Membership Discount</p>
+                      {canEditDiscount && <Edit size={10} className="text-blue-500" />}
+                   </div>
+                   <div className="relative">
+                      <input 
+                        type="number"
+                        min="0"
+                        max="100"
+                        disabled={!canEditDiscount}
+                        className={`w-full bg-transparent font-black text-xl outline-none ${canEditDiscount ? 'text-blue-600 dark:text-blue-400' : 'text-zinc-500 cursor-not-allowed'}`}
+                        value={formData.discountLevel}
+                        onChange={e => setFormData({...formData, discountLevel: Number(e.target.value)})}
+                      />
+                      <span className="absolute right-0 top-1/2 -translate-y-1/2 text-zinc-400"><Percent size={16}/></span>
+                   </div>
+                   {errors.discount && <p className="text-[8px] font-black text-red-500 uppercase mt-1">{errors.discount}</p>}
+                </div>
+                <div className="p-4 bg-zinc-50 dark:bg-zinc-800/50 border border-zinc-100 dark:border-zinc-700 rounded-2xl flex flex-col justify-center">
+                   <p className="text-[8px] font-black text-zinc-400 uppercase tracking-tighter mb-1">Total Rewards Point</p>
+                   <p className="text-xl font-black text-amber-500 flex items-center gap-2">
+                     {formData.loyaltyPoints} <Star size={14} fill="currentColor"/>
+                   </p>
                 </div>
               </div>
             </div>
@@ -200,7 +247,7 @@ const CRMView: React.FC = () => {
     <div className="p-4 sm:p-10 h-full flex flex-col gap-6 sm:gap-10 bg-zinc-50 dark:bg-zinc-950 overflow-y-auto relative transition-colors custom-scrollbar">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6">
         <div className="min-w-0">
-          <h2 className="text-3xl sm:text-5xl font-black text-zinc-900 dark:text-zinc-100 tracking-tightest leading-none">Customers</h2>
+          <h2 className="text-3xl sm:text-5xl font-black text-zinc-900 dark:text-zinc-100 tracking-tightest leading-none uppercase">Customers</h2>
           <p className="text-zinc-500 font-medium text-xs sm:text-base mt-2">Manage member profiles and loyalty rewards.</p>
         </div>
         <button 
@@ -236,7 +283,14 @@ const CRMView: React.FC = () => {
                   </div>
                   <div className="flex-1 min-w-0">
                     <h4 className="text-base sm:text-xl font-black text-zinc-900 dark:text-zinc-100 tracking-tightest truncate leading-tight">{customer.name}</h4>
-                    <div className="text-[9px] font-mono font-black text-blue-600 dark:text-blue-400 mt-1 uppercase tracking-widest bg-blue-50 dark:bg-blue-600/10 px-2 py-0.5 rounded-md w-fit">{customer.membershipId}</div>
+                    <div className="flex items-center gap-2 mt-1">
+                       <div className="text-[9px] font-mono font-black text-blue-600 dark:text-blue-400 uppercase tracking-widest bg-blue-50 dark:bg-blue-600/10 px-2 py-0.5 rounded-md w-fit">{customer.membershipId}</div>
+                       {customer.discountLevel > 0 && (
+                          <div className="text-[9px] font-black text-emerald-600 dark:text-emerald-400 uppercase tracking-widest bg-emerald-50 dark:bg-emerald-600/10 px-2 py-0.5 rounded-md w-fit flex items-center gap-1">
+                            <Percent size={8}/> {customer.discountLevel} Discount
+                          </div>
+                       )}
+                    </div>
                   </div>
                   <div className="flex gap-2 shrink-0 self-start">
                     <button 

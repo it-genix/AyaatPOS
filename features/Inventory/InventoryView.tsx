@@ -6,7 +6,7 @@ import {
   Power, AlertTriangle, ScanBarcode, Zap, RefreshCw, AlertCircle, ImageIcon, 
   Percent, ToggleLeft, ToggleRight, Clock, Lock, ShieldCheck, Printer, 
   Download, QrCode, ChevronUp, ChevronDown, Layers, MoreVertical, SortAsc, SortDesc,
-  LayoutGrid
+  LayoutGrid, FileText
 } from 'lucide-react';
 import JsBarcode from 'jsbarcode';
 import { MOCK_PRODUCTS, CURRENT_USER } from '../../mockData';
@@ -149,7 +149,7 @@ const ProductModal: React.FC<ProductModalProps> = ({ product, onClose, onSave, p
   const canEditPricing = user.role === UserRole.ADMIN || user.role === UserRole.MANAGER;
   
   const [formData, setFormData] = useState<Partial<Product>>(product || {
-    name: '', sku: prefilledSku || '', category: 'General', price: 0, offerPrice: 0, 
+    name: '', sku: prefilledSku || '', description: '', category: 'General', price: 0, offerPrice: 0, 
     isOfferManualActive: true, offerExpiryDate: '', cost: 0, stock: 0, minStock: 5, imageUrl: '',
     batchNumber: '', expiryDate: ''
   });
@@ -250,6 +250,17 @@ const ProductModal: React.FC<ProductModalProps> = ({ product, onClose, onSave, p
                   </button>
                 </div>
               </div>
+              <div className="space-y-2">
+                <label className="text-[10px] font-black uppercase tracking-widest text-zinc-400">Primary Category</label>
+                <input 
+                  disabled={!canEditBaseInfo} 
+                  type="text" 
+                  className="w-full bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl py-3 px-5 outline-none font-bold focus:ring-4 focus:ring-blue-600/10" 
+                  placeholder="Category"
+                  value={formData.category} 
+                  onChange={e => setFormData({...formData, category: e.target.value})} 
+                />
+              </div>
             </div>
           </div>
 
@@ -258,6 +269,18 @@ const ProductModal: React.FC<ProductModalProps> = ({ product, onClose, onSave, p
               <div className="space-y-2">
                 <label className="text-[10px] font-black uppercase tracking-widest text-zinc-400">Display Name</label>
                 <input disabled={!canEditBaseInfo} type="text" className="w-full bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-2xl py-3.5 px-5 outline-none font-bold focus:ring-4 focus:ring-blue-600/10 disabled:opacity-50" value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} required />
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-[10px] font-black uppercase tracking-widest text-zinc-400 flex items-center gap-2"><FileText size={12} /> Product Story / Description</label>
+                <textarea 
+                  disabled={!canEditBaseInfo} 
+                  rows={4}
+                  className="w-full bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-2xl py-3.5 px-5 outline-none font-medium text-xs focus:ring-4 focus:ring-blue-600/10 disabled:opacity-50 resize-none" 
+                  placeholder="Tell the product's story..."
+                  value={formData.description} 
+                  onChange={e => setFormData({...formData, description: e.target.value})}
+                />
               </div>
 
               <div className="p-4 bg-zinc-50 dark:bg-zinc-800/40 rounded-3xl border border-zinc-100 dark:border-zinc-800 space-y-4">
@@ -295,6 +318,23 @@ const ProductModal: React.FC<ProductModalProps> = ({ product, onClose, onSave, p
                     <input disabled={!canEditPricing} type="number" step="1" className="w-full border bg-white dark:bg-zinc-800 border-emerald-200 dark:border-emerald-900 rounded-2xl py-3.5 px-5 outline-none font-black" value={formData.offerPrice || ''} onChange={e => setFormData({...formData, offerPrice: parseFloat(e.target.value) || 0})} />
                   </div>
                 </div>
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black uppercase tracking-widest text-zinc-400">Unit Cost (৳)</label>
+                  <input disabled={!canEditPricing} type="number" step="1" className="w-full border bg-white dark:bg-zinc-800 border-zinc-200 dark:border-zinc-700 rounded-2xl py-3.5 px-5 outline-none font-bold" value={formData.cost} onChange={e => setFormData({...formData, cost: parseFloat(e.target.value)})} />
+                </div>
+              </div>
+              <div className="flex items-center justify-between p-4 bg-zinc-50 dark:bg-zinc-800/40 rounded-3xl border border-zinc-100 dark:border-zinc-800">
+                <div className="space-y-1">
+                  <p className="text-[10px] font-black uppercase tracking-widest text-zinc-900 dark:text-zinc-100">Web Visibility</p>
+                  <p className="text-[8px] font-bold text-zinc-500 uppercase">Show in Digital Store</p>
+                </div>
+                <button 
+                  type="button"
+                  onClick={() => setFormData({...formData, isVisibleOnline: !formData.isVisibleOnline})}
+                  className={`w-12 h-6 rounded-full transition-all relative ${formData.isVisibleOnline ? 'bg-blue-600' : 'bg-zinc-200 dark:bg-zinc-700'}`}
+                >
+                  <div className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-all ${formData.isVisibleOnline ? 'left-7' : 'left-1'}`} />
+                </button>
               </div>
             </div>
           </div>
@@ -417,6 +457,7 @@ const InventoryView: React.FC = () => {
           id: generateId(),
           sku: sku,
           name: data.name || 'Imported Product',
+          description: data.description || '',
           category: data.category || 'General',
           price: parseFloat(data.price) || 0,
           offerPrice: parseFloat(data['offer price']) || 0,
