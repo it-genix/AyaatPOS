@@ -387,7 +387,7 @@ const Storefront: React.FC<{
   const [authModal, setAuthModal] = useState<{isOpen: boolean, mode: 'LOGIN' | 'REGISTER'}>({ isOpen: false, mode: 'LOGIN' });
 
   const onlineProducts = useMemo(() => {
-    let list = products.filter(p => p.isVisibleOnline);
+    let list = [...products].filter(p => p.isVisibleOnline);
     if (activeProductFilter === 'NEW') return list.slice(0, 4);
     if (activeProductFilter === 'BEST') return list.sort((a,b) => b.price - a.price).slice(0, 4);
     return list;
@@ -878,7 +878,7 @@ const EcommerceView: React.FC = () => {
     }
   });
 
-  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>, target: 'HEADER' | 'FOOTER' | 'BANNER', idx?: number) => {
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>, target: 'HEADER' | 'FOOTER' | 'BANNER', idxOverride?: number) => {
     const file = e.target.files?.[0];
     if (!file) return;
     
@@ -888,10 +888,11 @@ const EcommerceView: React.FC = () => {
       if (target === 'HEADER') setStorefrontConfig(prev => ({ ...prev, headerLogo: result }));
       else if (target === 'FOOTER') setStorefrontConfig(prev => ({ ...prev, footerLogo: result }));
       else if (target === 'BANNER') {
-        if (idx !== undefined && idx !== null) {
+        const activeIdx = idxOverride !== undefined ? idxOverride : replaceIndex;
+        if (activeIdx !== null && activeIdx !== undefined) {
           setStorefrontConfig(prev => {
             const newBanners = [...prev.heroBanners];
-            newBanners[idx] = result;
+            newBanners[activeIdx] = result;
             return { ...prev, heroBanners: newBanners };
           });
           setReplaceIndex(null);
@@ -1056,7 +1057,7 @@ const EcommerceView: React.FC = () => {
                 ))}
              </div>
 
-             <div className="flex-1 p-10 overflow-y-auto custom-scrollbar h-full">
+             <div className="flex-1 p-10 overflow-y-auto custom-scrollbar h-full relative">
                 {cmsTab === 'IDENTITY' && (
                   <div className="space-y-10 animate-in fade-in slide-in-from-right-4">
                      <div className="space-y-2">
@@ -1078,8 +1079,8 @@ const EcommerceView: React.FC = () => {
                                    <p className="text-[10px] font-black uppercase tracking-widest text-zinc-400">Upload Header Logo</p>
                                 </div>
                               )}
-                              <input type="file" ref={headerLogoInputRef} className="hidden" onChange={e => handleFileUpload(e, 'HEADER')} accept="image/*" />
                            </div>
+                           <input type="file" ref={headerLogoInputRef} className="hidden" onChange={e => handleFileUpload(e, 'HEADER')} accept="image/*" />
                         </div>
                         <div className="space-y-6">
                            <div className="space-y-2">
@@ -1110,13 +1111,17 @@ const EcommerceView: React.FC = () => {
                                 
                                 <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-3">
                                    <button 
-                                      onClick={() => { setReplaceIndex(i); setTimeout(() => replaceBannerInputRef.current?.click(), 10); }}
+                                      onClick={(e) => { 
+                                        e.stopPropagation();
+                                        setReplaceIndex(i); 
+                                        replaceBannerInputRef.current?.click(); 
+                                      }}
                                       className="p-3 bg-white text-zinc-900 rounded-xl font-black text-[10px] uppercase tracking-widest flex items-center gap-2 hover:bg-blue-600 hover:text-white transition-all shadow-xl"
                                    >
                                       <RefreshCw size={14}/> Replace
                                    </button>
                                    <button 
-                                      onClick={() => removeBanner(i)}
+                                      onClick={(e) => { e.stopPropagation(); removeBanner(i); }}
                                       className="p-3 bg-red-500 text-white rounded-xl font-black text-[10px] uppercase tracking-widest flex items-center gap-2 hover:bg-red-600 transition-all shadow-xl"
                                    >
                                       <Trash2 size={14}/> Remove
@@ -1127,9 +1132,9 @@ const EcommerceView: React.FC = () => {
                            ))}
 
                            {storefrontConfig.heroBanners.length < 5 && (
-                             <button 
+                             <div 
                                 onClick={() => bannerInputRef.current?.click()}
-                                className="aspect-video rounded-[2rem] border-2 border-dashed border-zinc-200 dark:border-zinc-700 flex flex-col items-center justify-center gap-3 text-zinc-300 hover:text-blue-500 hover:border-blue-500 transition-all bg-zinc-50/50 dark:bg-zinc-800/20 group"
+                                className="aspect-video rounded-[2rem] border-2 border-dashed border-zinc-200 dark:border-zinc-700 flex flex-col items-center justify-center gap-3 text-zinc-300 hover:text-blue-500 hover:border-blue-500 transition-all bg-zinc-50/50 dark:bg-zinc-800/20 group cursor-pointer"
                              >
                                 <div className="p-4 bg-white dark:bg-zinc-900 rounded-2xl shadow-sm group-hover:scale-110 transition-transform">
                                   <Plus size={32} />
@@ -1138,19 +1143,25 @@ const EcommerceView: React.FC = () => {
                                    <p className="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-400">Add New Banner</p>
                                    <p className="text-[8px] font-bold text-zinc-300 uppercase mt-1">PNG, JPG, WEBP (Max 5MB)</p>
                                 </div>
-                             </button>
+                             </div>
                            )}
-
-                           {/* Hidden Inputs moved outside to prevent bubble issues */}
-                           <input type="file" ref={bannerInputRef} className="hidden" onChange={e => handleFileUpload(e, 'BANNER')} accept="image/*" />
-                           <input 
-                             type="file" 
-                             ref={replaceBannerInputRef} 
-                             className="hidden" 
-                             onChange={e => replaceIndex !== null && handleFileUpload(e, 'BANNER', replaceIndex)} 
-                             accept="image/*" 
-                           />
                         </div>
+
+                        {/* Hidden Inputs moved outside to prevent bubble issues and mount cycles */}
+                        <input 
+                           type="file" 
+                           ref={bannerInputRef} 
+                           className="hidden" 
+                           onChange={e => handleFileUpload(e, 'BANNER')} 
+                           accept="image/*" 
+                        />
+                        <input 
+                          type="file" 
+                          ref={replaceBannerInputRef} 
+                          className="hidden" 
+                          onChange={e => handleFileUpload(e, 'BANNER')} 
+                          accept="image/*" 
+                        />
 
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 pt-8 border-t border-zinc-100 dark:border-zinc-800">
                            <div className="space-y-2">
@@ -1274,8 +1285,8 @@ const EcommerceView: React.FC = () => {
                                    <p className="text-[10px] font-black uppercase tracking-widest text-zinc-400">Upload Footer Logo</p>
                                 </div>
                               )}
-                              <input type="file" ref={footerLogoInputRef} className="hidden" onChange={e => handleFileUpload(e, 'FOOTER')} accept="image/*" />
                            </div>
+                           <input type="file" ref={footerLogoInputRef} className="hidden" onChange={e => handleFileUpload(e, 'FOOTER')} accept="image/*" />
                         </div>
                         <div className="space-y-6">
                            <div className="space-y-2">
@@ -1342,7 +1353,7 @@ const EcommerceView: React.FC = () => {
                       <tr key={p.id} className="hover:bg-zinc-50 dark:hover:bg-zinc-800/20 transition-all">
                         <td className="px-10 py-6">
                            <div className="flex items-center gap-4">
-                              <div className="w-12 h-12 bg-zinc-100 dark:bg-zinc-800 rounded-xl overflow-hidden shrink-0 border border-zinc-200 dark:border-zinc-700">
+                              <div className="w-12 h-12 bg-zinc-100 dark:bg-zinc-800 rounded-xl overflow-hidden shrink-0 border border-zinc-100 dark:border-zinc-700">
                                  {p.imageUrl ? <img src={p.imageUrl} className="w-full h-full object-cover" alt="" /> : <Package className="m-auto h-full text-zinc-300" />}
                               </div>
                               <div className="min-w-0">

@@ -97,7 +97,7 @@ const ManagerPINModal: React.FC<{
 
   return (
     <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-200 no-print">
-      <div className={`bg-white dark:bg-zinc-900 rounded-[2.5rem] w-full max-w-sm p-8 space-y-6 shadow-2xl border-2 transition-all ${error ? 'border-red-500 animate-shake' : 'border-blue-600/20'}`}>
+      <div className={`bg-white dark:bg-zinc-900 rounded-[2.5rem] w-full max-sm p-8 space-y-6 shadow-2xl border-2 transition-all ${error ? 'border-red-500 animate-shake' : 'border-blue-600/20'}`}>
         <div className="text-center space-y-2">
           <div className="w-16 h-16 bg-blue-600/10 rounded-2xl mx-auto flex items-center justify-center text-blue-600 mb-4">
             <ShieldCheck size={32} />
@@ -136,9 +136,10 @@ interface ProductModalProps {
   onSave: (product: Product) => void;
   prefilledSku?: string;
   isManagerApproved?: boolean;
+  existingCategories?: string[];
 }
 
-const ProductModal: React.FC<ProductModalProps> = ({ product, onClose, onSave, prefilledSku, isManagerApproved = false }) => {
+const ProductModal: React.FC<ProductModalProps> = ({ product, onClose, onSave, prefilledSku, isManagerApproved = false, existingCategories = [] }) => {
   const isEdit = !!product;
   const fileInputRef = useRef<HTMLInputElement>(null);
   const barcodePreviewRef = useRef<SVGSVGElement>(null);
@@ -255,11 +256,17 @@ const ProductModal: React.FC<ProductModalProps> = ({ product, onClose, onSave, p
                 <input 
                   disabled={!canEditBaseInfo} 
                   type="text" 
+                  list="category-list"
                   className="w-full bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl py-3 px-5 outline-none font-bold focus:ring-4 focus:ring-blue-600/10" 
-                  placeholder="Category"
+                  placeholder="Type or select category..."
                   value={formData.category} 
                   onChange={e => setFormData({...formData, category: e.target.value})} 
                 />
+                <datalist id="category-list">
+                  {existingCategories.map(cat => (
+                    <option key={cat} value={cat} />
+                  ))}
+                </datalist>
               </div>
             </div>
           </div>
@@ -544,7 +551,7 @@ const InventoryView: React.FC = () => {
         </div>
       </div>
 
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-8 shrink-0 no-print">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-8 shrink-0 no-print">
         {[
           { label: 'Global SKUs', value: products.length, color: 'text-zinc-900 dark:text-zinc-100' },
           { label: 'Low Assets', value: products.filter(p => p.stock <= p.minStock).length, color: 'text-orange-500' },
@@ -772,7 +779,13 @@ const InventoryView: React.FC = () => {
         </div>
       </div>
 
-      {showModal && <ProductModal product={selectedProduct} isManagerApproved={isApproved} onClose={() => setShowModal(false)} onSave={p => { setProducts(prev => [p, ...prev.filter(x => x.id !== p.id)]); setShowModal(false); }} />}
+      {showModal && <ProductModal 
+        product={selectedProduct} 
+        isManagerApproved={isApproved} 
+        onClose={() => setShowModal(false)} 
+        onSave={p => { setProducts(prev => [p, ...prev.filter(x => x.id !== p.id)]); setShowModal(false); }} 
+        existingCategories={categories.filter(c => c !== 'ALL')}
+      />}
       {showPinModal && <ManagerPINModal onClose={() => setShowPinModal(false)} onSuccess={() => { setIsApproved(true); setShowPinModal(false); if(pendingAction?.type === 'ADD') { setSelectedProduct(undefined); setShowModal(true); } else if(pendingAction?.type === 'EDIT') { setSelectedProduct(pendingAction.product); setShowModal(true); } setPendingAction(null); }} />}
       {showBarcodeLabel && <BarcodeLabelModal product={showBarcodeLabel} onClose={() => setShowBarcodeLabel(null)} />}
     </div>
